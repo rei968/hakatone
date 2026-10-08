@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Фон застосунку (AppPalette.bg): старт без білого спалаху, як вимагає TEST_PLAN. -->
+    <color name="mango_background">#10141B</color>
+</resources>

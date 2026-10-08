@@ -1,0 +1,520 @@
+<title>Специфікація входу MangoDota</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap">
+<style>
+/* Layout: two-pane handoff like 01-main-menu. Left: sticky live device (splash, login, register). Right: spec. Stacks below 1080px. */
+:root{
+  --paper:#F4F5F8; --card:#FFFFFF; --ink:#141820; --ink-2:#465063; --ink-3:#687185; --rule:#DDE1E8; --code:#ECEEF3;
+  --mark:#9A5800; --on-mark:#FFFFFF;
+  --mk:#D62F92; --on-mk:#FFFFFF;
+  --chip-bg:#10141B; --chip-ink:#E9ECF2;
+  --f-display:"Unbounded", ui-sans-serif, system-ui, sans-serif;
+  --f-body:"Onest", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0B0D12; --card:#12161D; --ink:#E6E9EF; --ink-2:#A3ABBC; --ink-3:#7E879A; --rule:#242A35; --code:#191E27;
+    --mark:#FFA62B; --on-mark:#1A1206; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0B0D12; --card:#12161D; --ink:#E6E9EF; --ink-2:#A3ABBC; --ink-3:#7E879A; --rule:#242A35; --code:#191E27;
+  --mark:#FFA62B; --on-mark:#1A1206; color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:0 72px}
+@media (min-width:720px){.wrap{padding-inline:32px}}
+button,input{font-family:inherit}
+:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+
+.doc-head{padding-block:36px 32px;border-bottom:1px solid var(--rule);margin-bottom:32px}
+.brand{display:inline-flex;align-items:center;gap:10px;text-transform:none;padding:6px 14px 6px 6px;border-radius:999px;background:var(--chip-bg);color:var(--chip-ink);font:600 15px/1 var(--f-display);letter-spacing:-.01em}
+.brand .glyph{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#FFA62B24}
+.brand em{font-style:normal;color:#FFA62B}
+.eyebrow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;font:500 12px/16px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+h1{font:600 clamp(30px,5vw,48px)/1.1 var(--f-display);letter-spacing:-.02em;margin:18px 0 14px;text-wrap:balance}
+.lede{max-width:64ch;color:var(--ink-2);font-size:17px;margin:0}
+.facts{display:flex;flex-wrap:wrap;gap:12px 32px;margin:26px 0 0}
+.facts div{display:flex;flex-direction:column;min-width:0}
+.facts dt{font:500 11px/16px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)}
+.facts dd{margin:2px 0 0;font-weight:500;font-size:15px}
+
+.layout{display:grid;gap:40px}
+.stage{min-width:0}
+@media (min-width:1080px){
+  .layout{grid-template-columns:440px minmax(0,1fr);gap:56px;align-items:start}
+  .stage{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+}
+.controls{display:grid;gap:10px;margin-bottom:18px}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.ctl-l{font:500 11px/16px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);min-width:64px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px}
+.seg button{height:32px;padding:0 11px;border-radius:8px;border:1px solid var(--rule);background:var(--card);color:var(--ink-2);font:500 13px/1 var(--f-body);cursor:pointer}
+.seg button:hover{border-color:var(--ink-3)}
+.seg button[aria-pressed="true"]{background:var(--mark);border-color:var(--mark);color:var(--on-mark)}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);cursor:pointer}
+.check input{accent-color:var(--mk);width:16px;height:16px;margin:0}
+.stage-note{font-size:13px;color:var(--ink-3);text-align:center;margin:14px auto 0;max-width:46ch}
+.stage-note code{white-space:nowrap}
+
+/* ---------- device ---------- */
+.phone{--ph-h:780px;width:380px;max-width:100%;height:var(--ph-h);margin-inline:auto;padding:10px;border-radius:40px;background:#07090D;box-shadow:0 0 0 1px #2B3242,0 28px 60px -24px rgba(10,14,22,.55)}
+@media (min-width:1080px){.phone{--ph-h:clamp(620px,calc(100vh - 190px),800px)}}
+.app{
+  --a-bg:#10141B; --a-s1:#171C25; --a-s2:#1F2531; --a-s3:#283040; --a-border:#2A3141;
+  --a-text:#E9ECF2; --a-muted:#9AA3B5; --a-subtle:#7C8599; --a-ink:#1A1206;
+  --a-mango:#FFA62B; --a-mango-soft:#FFA62B24; --a-tango:#7BC74D; --a-salve:#F2545B; --a-salve-soft:#F2545B1F;
+  --a-clarity:#4DA3FF; --a-smoke:#A27BFF; --a-dust:#E9D8A6;
+  --mk:#D62F92;
+  position:relative;height:100%;overflow:hidden;border-radius:30px;display:flex;flex-direction:column;
+  background:var(--a-bg);color:var(--a-text);font:400 15px/20px var(--f-body);color-scheme:dark;container-type:inline-size;
+}
+.app button,.app input{color:inherit}
+.app :focus-visible{outline:2px solid var(--a-clarity);outline-offset:2px}
+.a-status{flex:none;height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 13px/1 var(--f-body)}
+.a-status span{display:inline-flex;gap:6px;align-items:center}
+.a-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column}
+.a-body::-webkit-scrollbar{display:none}
+.gesture{position:absolute;left:50%;bottom:8px;width:108px;height:4px;border-radius:2px;background:var(--a-text);opacity:.55;transform:translateX(-50%);z-index:7}
+
+/* splash */
+.splash{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:0 24px 64px;position:relative}
+.splash .halo{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:var(--a-mango-soft)}
+.splash .wm{font:600 28px/34px var(--f-display);letter-spacing:-.02em}
+.splash .wm em{font-style:normal;color:var(--a-mango)}
+.splash .tag{margin-top:-10px;font:400 14px/20px var(--f-body);color:var(--a-muted)}
+.splash .bar{position:absolute;bottom:72px;width:120px;height:3px;border-radius:2px;background:var(--a-s2);overflow:hidden}
+.splash .bar i{position:absolute;inset:0;width:40%;border-radius:2px;background:var(--a-dust);animation:slide 1.2s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+.splash .ver{position:absolute;bottom:40px;font:500 11px/14px var(--f-mono);color:var(--a-subtle)}
+
+/* auth form */
+.auth{flex:1;display:flex;flex-direction:column;padding:16px 16px 36px}
+.brandrow{position:relative;display:flex;align-items:center;gap:12px;min-height:48px}
+.logo{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--a-mango-soft)}
+.brandrow .wm{font:600 17px/22px var(--f-display);letter-spacing:-.01em}
+.brandrow .wm em{font-style:normal;color:var(--a-mango)}
+.heading{position:relative;margin-top:40px}
+.heading h2{margin:0;font:600 26px/32px var(--f-display);letter-spacing:-.02em}
+.heading p{margin:6px 0 0;font:400 14px/20px var(--f-body);color:var(--a-muted)}
+form{display:flex;flex-direction:column;gap:16px;margin-top:28px}
+.field{position:relative;display:flex;flex-direction:column;gap:6px}
+.field label{font:600 13px/18px var(--f-body);color:var(--a-muted)}
+.inp{position:relative;display:flex;align-items:center;height:48px;border-radius:12px;background:var(--a-s1);border:1px solid var(--a-border);transition:border-color .12s}
+.inp:focus-within{border-color:var(--a-clarity);box-shadow:0 0 0 1px var(--a-clarity)}
+.field.bad .inp{border-color:var(--a-salve)}
+.field.bad .inp:focus-within{box-shadow:0 0 0 1px var(--a-salve)}
+.inp input{flex:1;min-width:0;height:100%;padding:0 14px;border:0;background:none;font:400 15px/20px var(--f-body);outline:none}
+.inp input::placeholder{color:var(--a-subtle)}
+.inp input:disabled{opacity:.55}
+.eye{flex:none;width:48px;height:46px;display:grid;place-items:center;border:0;background:none;color:var(--a-muted) !important;cursor:pointer;border-radius:10px}
+.help{font:400 12px/16px var(--f-body);color:var(--a-muted)}
+.ferr{display:flex;gap:6px;align-items:flex-start;font:500 12px/16px var(--f-body);color:var(--a-salve)}
+.ferr svg{flex:none;margin-top:1px}
+.banner{position:relative;display:flex;gap:10px;align-items:flex-start;padding:12px 12px 12px 12px;border-radius:12px;background:var(--a-salve-soft);font:400 13px/18px var(--f-body)}
+.banner > svg{flex:none;color:var(--a-salve);margin-top:1px}
+.banner .b-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.banner .b-act{align-self:flex-start;margin:-6px 0 -10px -8px;height:36px;padding:0 8px;border:0;background:none;color:var(--a-clarity) !important;font:600 13px/18px var(--f-body);cursor:pointer;border-radius:8px}
+.primary{position:relative;height:48px;display:flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:12px;background:var(--a-mango);color:var(--a-ink) !important;font:600 15px/20px var(--f-body);cursor:pointer;transition:transform .12s,opacity .12s}
+.primary:active{transform:scale(.98)}
+.primary[disabled]{opacity:.75;cursor:default;transform:none}
+.spin{width:18px;height:18px;border-radius:50%;border:2px solid #1A120640;border-top-color:var(--a-ink);animation:rot .8s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.switch{position:relative;display:flex;justify-content:center;align-items:center;gap:4px;margin-top:4px;font:400 14px/20px var(--f-body);color:var(--a-muted)}
+.switch button{height:44px;padding:0 6px;border:0;background:none;color:var(--a-clarity) !important;font:600 14px/20px var(--f-body);cursor:pointer;border-radius:8px}
+.fine{margin-top:auto;padding-top:24px;text-align:center;font:400 12px/16px var(--f-body);color:var(--a-subtle)}
+
+.toast{position:absolute;left:12px;right:12px;bottom:28px;z-index:8;display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 16px;border-radius:12px;background:var(--a-text);color:var(--a-bg);font:500 14px/20px var(--f-body);opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .16s,transform .16s}
+.toast.show{opacity:1;transform:none}
+.toast i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--a-tango)}
+
+.mk{display:none;position:absolute;z-index:9;top:-8px;left:-8px;width:20px;height:20px;border-radius:50%;background:var(--mk);color:#FFFFFF;font:600 11px/20px var(--f-mono);text-align:center;box-shadow:0 0 0 2px var(--a-bg);pointer-events:none}
+.app.anat .mk{display:block}
+.app.anat [data-mk]{outline:1px dashed var(--mk);outline-offset:3px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.app *{animation:none !important;transition-duration:.01ms !important}}
+
+/* ---------- spec ---------- */
+.spec{min-width:0;max-width:860px}
+.spec section{padding-block:4px 36px;border-top:1px solid var(--rule)}
+.spec section:first-child{border-top:0}
+.spec h2{display:flex;align-items:baseline;gap:12px;margin:28px 0 12px;font:600 22px/1.25 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.spec h2 .idx{flex:none;font:500 13px/1 var(--f-mono);color:var(--mark)}
+.spec h3{margin:28px 0 8px;font:600 16px/1.4 var(--f-body)}
+.spec p,.spec li{max-width:70ch}
+.spec p{margin:0 0 12px}
+.note{color:var(--ink-2);font-size:15px}
+.spec ul{padding-left:20px;margin:8px 0 12px}
+.spec li{margin:6px 0}
+.dec{list-style:none;padding:0 !important}
+.dec li{padding-left:16px;border-left:2px solid var(--rule);margin:14px 0}
+code{font:500 .82em/1.4 var(--f-mono);background:var(--code);padding:.12em .4em;border-radius:4px}
+.tbl{overflow-x:auto;margin:12px 0 6px;border:1px solid var(--rule);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:14px;line-height:1.45}
+th{padding:10px 12px;border-bottom:1px solid var(--rule);text-align:left;white-space:nowrap;font:500 11px/16px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,.num{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.anat-list{list-style:none;padding:0 !important;margin:14px 0;display:grid;gap:12px}
+.anat-list li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;align-items:start;margin:0}
+.anat-list .n2{width:22px;height:22px;margin-top:2px;border-radius:50%;background:var(--mk);color:var(--on-mk);font:600 11px/22px var(--f-mono);text-align:center}
+.linkbtn{border:0;background:none;padding:0;color:var(--ink);font:600 15px/1.4 var(--f-body);text-decoration:underline;text-decoration-color:var(--mark);text-underline-offset:3px;cursor:pointer}
+.show{height:28px;padding:0 10px;border:1px solid var(--rule);border-radius:7px;background:var(--card);color:var(--ink-2);font:500 12px/1 var(--f-body);cursor:pointer;white-space:nowrap}
+.show:hover{border-color:var(--ink-3)}
+pre.code{overflow-x:auto;margin:12px 0;padding:14px 16px;border-radius:10px;background:var(--code);font:400 13px/1.55 var(--f-mono)}
+pre.code code{background:none;padding:0;white-space:pre;font-size:inherit}
+.flow{overflow-x:auto;margin:12px 0;padding:16px;border:1px solid var(--rule);border-radius:10px;background:var(--card)}
+.flow pre{margin:0;font:400 13px/1.55 var(--f-mono)}
+.qs li{margin:10px 0}
+</style>
+
+<div class="wrap">
+  <header class="doc-head">
+    <div class="eyebrow">
+      <span class="brand"><span class="glyph" data-icon="mango" data-size="22"></span><span class="bw">Mango<em>Dota</em></span></span>
+      <span>Handoff · v0.1 · 8 жовтня 2026</span>
+    </div>
+    <h1>Вхід і реєстрація</h1>
+    <p class="lede">Splash, вхід і реєстрація MangoDota за контрактом <code>docs/openapi.yaml</code>. Палітра та шрифти ті самі, що й на головному екрані. Ліворуч робочий макет з формою, праворуч специфікація для Flutter.</p>
+    <dl class="facts">
+      <div><dt>Ендпоінти</dt><dd><code>POST /api/auth/login</code>, <code>/register</code></dd></div>
+      <div><dt>Поля</dt><dd>Email і пароль</dd></div>
+      <div><dt>Після входу</dt><dd>JWT → екран мети <code>/</code></dd></div>
+      <div><dt>Пункт беклогу</dt><dd>3 · Інтерфейс авторизації</dd></div>
+    </dl>
+  </header>
+
+  <div class="layout">
+    <aside class="stage" id="stage" aria-label="Інтерактивний макет">
+      <div class="controls" id="controls">
+        <div class="ctl"><span class="ctl-l">Екран</span>
+          <div class="seg" data-ctl="screen">
+            <button type="button" data-v="splash" aria-pressed="false">Splash</button>
+            <button type="button" data-v="login" aria-pressed="true">Вхід</button>
+            <button type="button" data-v="register" aria-pressed="false">Реєстрація</button>
+          </div>
+          <label class="check" for="anatToggle"><input type="checkbox" id="anatToggle"> Анатомія</label>
+        </div>
+        <div class="ctl"><span class="ctl-l">Стан</span>
+          <div class="seg" data-ctl="preset">
+            <button type="button" data-v="empty">Порожньо</button>
+            <button type="button" data-v="invalid">Помилки полів</button>
+            <button type="button" data-v="loading">Надсилання</button>
+            <button type="button" data-v="wrong">Невірний пароль</button>
+            <button type="button" data-v="taken">Email зайнятий</button>
+            <button type="button" data-v="offline">Немає мережі</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone">
+        <div class="app" id="app">
+          <div class="a-status" aria-hidden="true">
+            <span>9:41</span>
+            <span>
+              <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 11.5 0.8 4.2a10.2 10.2 0 0 1 14.4 0z" fill="currentColor"/></svg>
+              <svg width="12" height="12" viewBox="0 0 12 12"><path d="M11.5 0.5v11h-11z" fill="currentColor"/></svg>
+              <svg width="22" height="12" viewBox="0 0 22 12"><rect x=".5" y=".5" width="19" height="11" rx="3" fill="none" stroke="currentColor" opacity=".55"/><rect x="2" y="2" width="13" height="8" rx="1.5" fill="currentColor"/><rect x="20.5" y="4" width="1.5" height="4" rx=".75" fill="currentColor" opacity=".55"/></svg>
+            </span>
+          </div>
+          <div class="a-body" id="body"></div>
+          <span class="gesture" aria-hidden="true"></span>
+          <div class="toast" id="toast" role="status" aria-live="polite"></div>
+          <div class="sr" id="live" aria-live="assertive"></div>
+        </div>
+      </div>
+      <p class="stage-note">Форма працює. Демо-акаунт з <code>openapi.yaml</code>: <code>player@example.com</code> / <code>secret123</code>. Інший пароль поверне 401, а реєстрація з цим email — 400.</p>
+    </aside>
+
+    <article class="spec">
+      <section id="overview">
+        <h2><span class="idx">01</span>Огляд</h2>
+        <p>За <code>docs/TEST_PLAN.md</code> щасливий шлях демо такий: вхід → екран мети → картка Pudge з AI-білдом → офлайн. Тому вхід — перше, що бачить новий гравець, і він має пройти за кілька секунд, навіть з телефона в одній руці перед драфтом.</p>
+        <ul class="dec">
+          <li><strong>Один екран, два режими.</strong> Вхід (<code>/login</code>) і реєстрація (<code>/register</code>) мають однакову форму: email і пароль, як у контракті. Перемикає режим посилання під кнопкою, а введені email і пароль не губляться.</li>
+          <li><strong>Реєстрація одразу впускає.</strong> <code>POST /api/auth/register</code> повертає токен (201), тож після неї гравець одразу на екрані мети, без повторного входу.</li>
+          <li><strong>Повторного пароля немає.</strong> Замість нього кнопка «Показати пароль»: менше полів — швидше на демо, а помилку видно одразу.</li>
+          <li><strong>Помилки пояснюють, що робити.</strong> На 401 підказуємо перевірити розкладку клавіатури: в українського гравця за замовчуванням часто увімкнена українська.</li>
+          <li><strong>Валідуємо після першої спроби.</strong> Поки гравець друкує вперше, червоного немає. Після натискання кнопки помилки оновлюються наживо.</li>
+          <li><strong>Без гостьового входу і відновлення пароля.</strong> Для них немає ендпоінтів. Якщо токен уже збережено, splash веде одразу на мету, і вона працює офлайн з кешу.</li>
+        </ul>
+      </section>
+
+      <section id="flow">
+        <h2><span class="idx">02</span>Потік екранів</h2>
+<div class="flow"><pre class="mermaid">
+flowchart LR
+  S["Splash: перевірка токена в Hive"] -->|"токен є"| M["Мета героїв /"]
+  S -->|"токена немає"| L["Вхід /login"]
+  L <-->|"посилання під кнопкою"| R["Реєстрація /register"]
+  L -->|"200 + JWT"| M
+  R -->|"201 + JWT"| M
+  M -->|"Вийти в меню профілю"| L
+  M -->|"401 від будь-якого запиту"| L
+</pre></div>
+        <p class="note">У go_router це один <code>redirect</code>: без токена будь-який маршрут, крім <code>/login</code> і <code>/register</code>, веде на <code>/login</code>, а з токеном ці два ведуть на <code>/</code>. Після входу стек замінюється (<code>context.go</code>), тож «Назад» не повертає на форму.</p>
+      </section>
+
+      <section id="anatomy">
+        <h2><span class="idx">03</span>Анатомія форми</h2>
+        <p>Номери відповідають міткам на макеті. <button type="button" class="linkbtn" id="showAnat">Показати мітки на макеті</button></p>
+        <ol class="anat-list">
+          <li><span class="n2">1</span><div><strong>Бренд</strong> · 48 dp: логотип-манго 40 і назва, як у шапці головного екрана. Так перехід після входу виглядає продовженням того самого місця.</div></li>
+          <li><span class="n2">2</span><div><strong>Заголовок</strong> «Вхід» або «Реєстрація» (Unbounded 26/32) і рядок пояснення.</div></li>
+          <li><span class="n2">3</span><div><strong>Email</strong>: підпис над полем, поле 48 dp, під ним помилка.</div></li>
+          <li><span class="n2">4</span><div><strong>Пароль</strong> з кнопкою «Показати» (48 × 48). У реєстрації підказка «Щонайменше 6 символів».</div></li>
+          <li><span class="n2">5</span><div><strong>Банер помилки сервера</strong>: 401, 400, мережа. Для 400 має дію «Увійти з цим email».</div></li>
+          <li><span class="n2">6</span><div><strong>Головна кнопка</strong> манго на всю ширину, 48 dp. Під час надсилання показує спінер і текст «Входимо…».</div></li>
+          <li><span class="n2">7</span><div><strong>Перемикач режиму</strong>: «Немає акаунта? Зареєструватися» або «Вже маєте акаунт? Увійти».</div></li>
+        </ol>
+      </section>
+
+      <section id="grid">
+        <h2><span class="idx">04</span>Розміри й відступи</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Блок</th><th>Розмір</th><th>Відступ зверху</th><th>Примітка</th></tr></thead>
+          <tbody>
+            <tr><td>Поля екрана</td><td class="num">16 · 16 · 36</td><td>—</td><td>Ліво/право <code>space4</code>, знизу запас над панеллю жестів.</td></tr>
+            <tr><td>Бренд</td><td class="num">48</td><td class="num">16</td><td>Лого 40, проміжок 12.</td></tr>
+            <tr><td>Заголовок</td><td class="num">32 + 6 + 20</td><td class="num">40</td><td>Оптичний центр форми трохи вище середини екрана.</td></tr>
+            <tr><td>Форма</td><td class="num">поле 48</td><td class="num">28</td><td>Проміжок між блоками форми <code>space4</code>, між підписом і полем 6.</td></tr>
+            <tr><td>Кнопка</td><td class="num">48</td><td><code>space4</code></td><td>На всю ширину, радіус <code>radiusLg</code>.</td></tr>
+            <tr><td>Підпис унизу</td><td class="num">16</td><td>auto</td><td>Притиснутий донизу, коли клавіатура закрита.</td></tr>
+          </tbody>
+        </table></div>
+        <p class="note">Коли відкрита клавіатура, форма прокручується (<code>SingleChildScrollView</code> + <code>resizeToAvoidBottomInset</code>), а активне поле й кнопка лишаються над нею.</p>
+      </section>
+
+      <section id="components">
+        <h2><span class="idx">05</span>Компоненти</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Віджет</th><th>Параметри</th><th>Нотатки</th></tr></thead>
+          <tbody>
+            <tr><td><code>SplashScreen</code></td><td>—</td><td>Лого 112, назва, «Мета Dota 2 і AI-білди», смужка завантаження кольору дасту. Системний splash Android 12+ має той самий фон <code>#10141B</code> і манго, тож перехід непомітний.</td></tr>
+            <tr><td><code>AuthScreen</code></td><td><code>mode: login | register</code></td><td>Один віджет на два маршрути. Стан форми живе в <code>AuthController</code> (Riverpod).</td></tr>
+            <tr><td><code>AppTextField</code></td><td><code>label, hint, helper?, error?, keyboardType, autofillHints, textInputAction</code></td><td>Підпис над полем, а не плаваючий: його видно й у заповненому полі. Стиль береться з <code>inputDecorationTheme</code>.</td></tr>
+            <tr><td><code>PasswordField</code></td><td>те саме + <code>obscure</code></td><td>Кнопка-око 48 × 48 з tooltip «Показати пароль» або «Сховати пароль».</td></tr>
+            <tr><td><code>AuthErrorBanner</code></td><td><code>message, actionLabel?, onAction</code></td><td>Фон фласки 12 %, іконка фласки, текст кольору <code>onSurface</code>.</td></tr>
+            <tr><td><code>PrimaryButton</code></td><td><code>label, loadingLabel, loading, onPressed</code></td><td><code>FilledButton</code> з теми. Під час loading вимкнена, зі спінером 18 dp кольору ink.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="validation">
+        <h2><span class="idx">06</span>Валідація і тексти помилок</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Умова</th><th>Де</th><th>Текст</th></tr></thead>
+          <tbody>
+            <tr><td>Email порожній</td><td>Під полем</td><td>Введіть email.</td></tr>
+            <tr><td>Email без <code>@</code> або домену</td><td>Під полем</td><td>Email має виглядати як name@example.com.</td></tr>
+            <tr><td>Пароль порожній</td><td>Під полем</td><td>Введіть пароль.</td></tr>
+            <tr><td>Пароль коротший за 6 (реєстрація)</td><td>Під полем</td><td>Пароль має містити щонайменше 6 символів.</td></tr>
+            <tr><td><code>401</code> на вході</td><td>Банер</td><td>Невірний email або пароль. Перевірте, чи увімкнена англійська розкладка.</td></tr>
+            <tr><td><code>400</code> на реєстрації</td><td>Банер + дія</td><td>Акаунт з цим email уже існує. Дія: «Увійти з цим email».</td></tr>
+            <tr><td>Немає мережі, таймаут 10 с</td><td>Банер</td><td>Немає з’єднання з сервером. Перевірте інтернет і спробуйте ще раз.</td></tr>
+            <tr><td><code>5xx</code></td><td>Банер</td><td>Сервер не відповідає. Спробуйте ще раз за хвилину.</td></tr>
+          </tbody>
+        </table></div>
+        <ul>
+          <li>Email обрізається від пробілів і переводиться в нижній регістр перед надсиланням. Пароль не змінюється.</li>
+          <li>Після невдалого входу пароль лишається в полі, а фокус переходить на нього: найчастіше помилка саме там.</li>
+          <li>Банер зникає, щойно гравець змінює будь-яке поле.</li>
+        </ul>
+      </section>
+
+      <section id="states">
+        <h2><span class="idx">07</span>Стани</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Стан</th><th>Що видно</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Splash</td><td>Лого, назва, смужка дасту. Триває рівно стільки, скільки читається токен з Hive, без штучної затримки.</td><td><button type="button" class="show" data-show="splash">Показати</button></td></tr>
+            <tr><td>Порожня форма</td><td>Кнопка активна. Якщо натиснути її з порожніми полями, з’являються помилки під полями.</td><td><button type="button" class="show" data-show="empty">Показати</button></td></tr>
+            <tr><td>Помилки полів</td><td>Червона рамка і текст під полем, фокус на першому полі з помилкою.</td><td><button type="button" class="show" data-show="invalid">Показати</button></td></tr>
+            <tr><td>Надсилання</td><td>Поля й кнопка вимкнені, спінер у кнопці.</td><td><button type="button" class="show" data-show="loading">Показати</button></td></tr>
+            <tr><td>Невірний пароль</td><td>Банер 401 над кнопкою.</td><td><button type="button" class="show" data-show="wrong">Показати</button></td></tr>
+            <tr><td>Email зайнятий</td><td>Банер 400 з дією «Увійти з цим email».</td><td><button type="button" class="show" data-show="taken">Показати</button></td></tr>
+            <tr><td>Немає мережі</td><td>Банер мережі. Поля не очищаються.</td><td><button type="button" class="show" data-show="offline">Показати</button></td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="keyboard">
+        <h2><span class="idx">08</span>Клавіатура й автозаповнення</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Поле</th><th>keyboardType</th><th>autofillHints</th><th>textInputAction</th></tr></thead>
+          <tbody>
+            <tr><td>Email</td><td><code>emailAddress</code></td><td><code>email</code></td><td><code>next</code> → пароль</td></tr>
+            <tr><td>Пароль (вхід)</td><td><code>visiblePassword</code> / obscure</td><td><code>password</code></td><td><code>done</code> → надіслати</td></tr>
+            <tr><td>Пароль (реєстрація)</td><td>те саме</td><td><code>newPassword</code></td><td><code>done</code> → надіслати</td></tr>
+          </tbody>
+        </table></div>
+        <p class="note">Обидва поля загорнуті в <code>AutofillGroup</code>, тож менеджер паролів Android запропонує зберегти дані після успішного входу (<code>TextInput.finishAutofillContext()</code>).</p>
+      </section>
+
+      <section id="a11y">
+        <h2><span class="idx">09</span>Доступність</h2>
+        <ul>
+          <li>Порядок фокусу: email → пароль → «Показати пароль» → кнопка → перемикач режиму.</li>
+          <li>Помилки полів прив’язані до полів (<code>errorText</code>) і читаються разом з підписом.</li>
+          <li>Банер сервера оголошується одразу (<code>liveRegion</code>), бо після натискання кнопки фокус лишається на ній.</li>
+          <li>Спінер у кнопці озвучується як «Входимо…», а не мовчки.</li>
+          <li>Кнопка «Показати пароль» — перемикач зі станом «показано» або «приховано».</li>
+        </ul>
+      </section>
+
+      <section id="data">
+        <h2><span class="idx">10</span>Дані й сесія</h2>
+<pre class="code"><code>POST /api/auth/login        { "email": "player@example.com", "password": "secret123" }
+200 → AuthResponse          { "token": "eyJhbGciOiJIUzI1NiIsIn…",
+                              "user": { "id": "usr_123", "email": "player@example.com" } }
+401 → невірний логін або пароль
+
+POST /api/auth/register     те саме тіло
+201 → AuthResponse          одразу вхід
+400 → невалідні дані або email зайнятий</code></pre>
+        <ul>
+          <li><code>AuthController</code> (Riverpod <code>AsyncNotifier</code>) тримає стан: <code>signedOut</code>, <code>submitting</code>, <code>signedIn(user)</code>, помилка.</li>
+          <li>Токен і email зберігаються в Hive (бокс <code>session</code>) і додаються в dio-запити заголовком <code>Authorization: Bearer …</code>.</li>
+          <li>Будь-яка відповідь 401 від API стирає сесію й повертає на <code>/login</code>.</li>
+          <li>На моках (до підключення API) — <code>MockAuthRepository</code> з тими самими відповідями, що й у макеті вище.</li>
+        </ul>
+      </section>
+
+      <section id="questions">
+        <h2><span class="idx">11</span>Відкриті питання до бекенду</h2>
+        <ol class="qs">
+          <li><strong>Правила пароля.</strong> У контракті немає мінімальної довжини. Беремо 6 символів як у прикладі <code>secret123</code>?</li>
+          <li><strong>Як відрізнити «email зайнятий» від «невалідних даних»</strong>, якщо обидва — 400? Потрібне поле <code>error</code> або <code>code</code> у тілі відповіді.</li>
+          <li><strong>Термін дії токена.</strong> Ендпоінта оновлення немає. Після закінчення терміну гравець просто входить знову?</li>
+          <li><strong>Де зберігати токен.</strong> Hive — простий файл у пісочниці застосунку. Для хакатону цього досить, а для релізу краще <code>flutter_secure_storage</code>.</li>
+        </ol>
+      </section>
+    </article>
+  </div>
+</div>
+
+<script>
+(function(){
+  var ICON = {
+    mango:'<path d="M15.6 6.2c3.1 1.5 4.4 5.1 3.2 8.6-1.4 4.2-5.6 6.6-9.4 5.4-3.3-1-4.9-4.3-3.9-7.8 1.2-4.1 5.7-7.8 10.1-6.2z" fill="#FFA62B"/><path d="M14.8 5.9c.4-2 2-3.3 4.3-3.4-.3 2.1-2 3.6-4.3 3.4z" fill="#7BC74D"/><path d="M14.4 6.3c-.2-.9-.6-1.6-1.2-2.1" stroke="#7BC74D" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+    eye:'<path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" stroke-width="2"/>',
+    eyeOff:'<path d="M10.6 5.6A10 10 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.5 7.3C3.9 9 2.5 12 2.5 12s3.5 6.5 9.5 6.5c1.6 0 3-.4 4.2-1M9.9 9.9a2.8 2.8 0 0 0 4.2 4.2M3 3l18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+    alert:'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5v5.5M12 16.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    wifiOff:'<path d="M2 8.8a15.5 15.5 0 0 1 4.5-2.8M10.5 5.1A15.5 15.5 0 0 1 22 8.8M5 12.6a10.5 10.5 0 0 1 5-2.5M16.6 10.7c.9.5 1.7 1.1 2.4 1.9M8.5 16.1a6 6 0 0 1 7 0M12 20h.01M3 3l18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+  };
+  function svg(n,s){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" aria-hidden="true">'+ICON[n]+'</svg>';}
+  document.querySelectorAll('[data-icon]').forEach(function(el){el.innerHTML=svg(el.getAttribute('data-icon'),+el.getAttribute('data-size')||28);});
+
+  var DEMO={email:'player@example.com',pass:'secret123'};
+  var MSG={
+    emailEmpty:'Введіть email.', emailBad:'Email має виглядати як name@example.com.',
+    passEmpty:'Введіть пароль.', passShort:'Пароль має містити щонайменше 6 символів.',
+    wrong:'Невірний email або пароль. Перевірте, чи увімкнена англійська розкладка.',
+    taken:'Акаунт з цим email уже існує.', offline:'Немає з’єднання з сервером. Перевірте інтернет і спробуйте ще раз.'
+  };
+  var S={screen:'login', email:'', pass:'', show:false, tried:false, errs:{}, banner:null, loading:false, forceOffline:false};
+  var body=document.getElementById('body'), app=document.getElementById('app'), toastEl=document.getElementById('toast'), live=document.getElementById('live');
+
+  function validate(){
+    var e={}, em=S.email.trim();
+    if(!em) e.email=MSG.emailEmpty; else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) e.email=MSG.emailBad;
+    if(!S.pass) e.pass=MSG.passEmpty; else if(S.pass.length<6) e.pass=MSG.passShort;
+    return e;
+  }
+  function fieldErr(msg){return msg?'<span class="ferr" id="'+(msg===S.errs.email?'e-email':'e-pass')+'">'+svg('alert',14)+'<span>'+msg+'</span></span>':'';}
+  function render(focusId){
+    if(S.screen==='splash'){
+      body.innerHTML='<div class="splash" role="img" aria-label="MangoDota, завантаження"><span class="halo">'+svg('mango',72)+'</span><span class="wm">Mango<em>Dota</em></span><span class="tag">Мета Dota 2 і AI-білди</span><span class="bar"><i></i></span><span class="ver">v0.1.0</span></div>';
+      syncCtl(); return;
+    }
+    var reg=S.screen==='register';
+    var bannerHTML='';
+    if(S.banner){
+      var ic=S.banner==='offline'?'wifiOff':'alert';
+      bannerHTML='<div class="banner" data-mk="5" role="alert"><span class="mk" aria-hidden="true">5</span>'+svg(ic,18)+'<span class="b-txt"><span>'+MSG[S.banner]+'</span>'+(S.banner==='taken'?'<button type="button" class="b-act" data-act="to-login">Увійти з цим email</button>':'')+'</span></div>';
+    }
+    var dis=S.loading?' disabled':'';
+    body.innerHTML='<div class="auth">'+
+      '<div class="brandrow" data-mk="1"><span class="mk" aria-hidden="true">1</span><span class="logo">'+svg('mango',28)+'</span><span class="wm">Mango<em>Dota</em></span></div>'+
+      '<div class="heading" data-mk="2"><span class="mk" aria-hidden="true">2</span><h2>'+(reg?'Реєстрація':'Вхід')+'</h2><p>'+(reg?'Потрібні лише email і пароль.':'Увійдіть, щоб бачити мету патча й AI-білди героїв.')+'</p></div>'+
+      '<form id="f" novalidate>'+
+        '<div class="field'+(S.errs.email?' bad':'')+'" data-mk="3"><span class="mk" aria-hidden="true">3</span><label for="email">Email</label><div class="inp"><input id="email" type="email" inputmode="email" autocomplete="email" placeholder="player@example.com" value="'+S.email.replace(/"/g,'&quot;')+'"'+(S.errs.email?' aria-invalid="true" aria-describedby="e-email"':'')+dis+'></div>'+fieldErr(S.errs.email)+'</div>'+
+        '<div class="field'+(S.errs.pass?' bad':'')+'" data-mk="4"><span class="mk" aria-hidden="true">4</span><label for="pass">Пароль</label><div class="inp"><input id="pass" type="'+(S.show?'text':'password')+'" autocomplete="'+(reg?'new-password':'current-password')+'" placeholder="••••••" value="'+S.pass.replace(/"/g,'&quot;')+'"'+(S.errs.pass?' aria-invalid="true" aria-describedby="e-pass"':'')+dis+'><button type="button" class="eye" data-act="eye" aria-pressed="'+S.show+'" aria-label="'+(S.show?'Сховати пароль':'Показати пароль')+'"'+dis+'>'+svg(S.show?'eyeOff':'eye',20)+'</button></div>'+
+          (S.errs.pass?fieldErr(S.errs.pass):(reg?'<span class="help">Щонайменше 6 символів</span>':''))+'</div>'+
+        bannerHTML+
+        '<button type="submit" class="primary" data-mk="6"'+dis+'><span class="mk" aria-hidden="true">6</span>'+(S.loading?'<span class="spin" aria-hidden="true"></span>'+(reg?'Створюємо акаунт…':'Входимо…'):(reg?'Створити акаунт':'Увійти'))+'</button>'+
+        '<div class="switch" data-mk="7"><span class="mk" aria-hidden="true">7</span>'+(reg?'Вже маєте акаунт?<button type="button" data-act="mode">Увійти</button>':'Немає акаунта?<button type="button" data-act="mode">Зареєструватися</button>')+'</div>'+
+      '</form>'+
+      '<p class="fine">Мету рахує OpenDota, білди пише Gemini.</p>'+
+    '</div>';
+    if(focusId){var el=document.getElementById(focusId); if(el){el.focus(); if(el.setSelectionRange&&el.type!=='email'){var l=el.value.length; try{el.setSelectionRange(l,l);}catch(e){}}}}
+    syncCtl();
+  }
+  function syncCtl(){
+    document.querySelectorAll('[data-ctl="screen"] button').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-v')===S.screen));});
+  }
+  var tt;
+  function toast(m){toastEl.innerHTML='<i></i><span>'+m+'</span>'; toastEl.classList.add('show'); clearTimeout(tt); tt=setTimeout(function(){toastEl.classList.remove('show');},3000);}
+
+  function submit(){
+    S.tried=true; S.errs=validate(); S.banner=null;
+    if(S.errs.email||S.errs.pass){ render(S.errs.email?'email':'pass'); return; }
+    S.loading=true; render();
+    setTimeout(function(){
+      S.loading=false;
+      var em=S.email.trim().toLowerCase();
+      if(S.forceOffline){ S.banner='offline'; }
+      else if(S.screen==='login'){ if(em===DEMO.email&&S.pass===DEMO.pass){ toast('Вхід успішний → екран мети'); } else { S.banner='wrong'; } }
+      else { if(em===DEMO.email){ S.banner='taken'; } else { toast('Акаунт створено → екран мети'); } }
+      render(S.banner==='wrong'?'pass':null);
+      if(S.banner) { live.textContent=''; setTimeout(function(){live.textContent=MSG[S.banner];},50); }
+    },1100);
+  }
+
+  body.addEventListener('submit',function(e){e.preventDefault(); submit();});
+  body.addEventListener('input',function(e){
+    if(e.target.id==='email') S.email=e.target.value;
+    if(e.target.id==='pass') S.pass=e.target.value;
+    var hadBanner=!!S.banner; S.banner=null;
+    if(S.tried){ var before=JSON.stringify(S.errs); S.errs=validate(); if(before!==JSON.stringify(S.errs)||hadBanner) render(e.target.id); }
+    else if(hadBanner) render(e.target.id);
+  });
+  body.addEventListener('click',function(e){
+    var el=e.target.closest('[data-act]'); if(!el) return;
+    var a=el.getAttribute('data-act');
+    if(a==='eye'){ S.show=!S.show; render('pass'); }
+    else if(a==='mode'){ S.screen=S.screen==='login'?'register':'login'; S.errs={}; S.tried=false; S.banner=null; render(); }
+    else if(a==='to-login'){ S.screen='login'; S.banner=null; S.errs={}; S.tried=false; S.pass=''; render('pass'); }
+  });
+
+  function preset(p){
+    if(S.screen==='splash') S.screen='login';
+    S.forceOffline=false; S.loading=false; S.banner=null; S.errs={}; S.tried=false; S.show=false;
+    if(p==='empty'){ S.email=''; S.pass=''; }
+    if(p==='invalid'){ S.email='player@'; S.pass='123'; S.tried=true; if(S.screen==='login') S.screen='register'; S.errs=validate(); }
+    if(p==='loading'){ S.email=DEMO.email; S.pass=DEMO.pass; S.loading=true; }
+    if(p==='wrong'){ S.screen='login'; S.email=DEMO.email; S.pass='secret12'; S.banner='wrong'; }
+    if(p==='taken'){ S.screen='register'; S.email=DEMO.email; S.pass='qwerty123'; S.banner='taken'; }
+    if(p==='offline'){ S.email=DEMO.email; S.pass=DEMO.pass; S.banner='offline'; S.forceOffline=true; }
+    render();
+  }
+  document.getElementById('controls').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    var ctl=b.parentElement.getAttribute('data-ctl'), v=b.getAttribute('data-v');
+    if(ctl==='screen'){ S.screen=v; S.banner=null; S.errs={}; S.tried=false; S.loading=false; render(); }
+    else if(ctl==='preset'){ preset(v); }
+  });
+  var anat=document.getElementById('anatToggle');
+  anat.addEventListener('change',function(){app.classList.toggle('anat',anat.checked);});
+  function toStage(){ if(window.innerWidth<1080) document.getElementById('stage').scrollIntoView({behavior:'smooth',block:'start'}); }
+  document.getElementById('showAnat').addEventListener('click',function(){ anat.checked=true; app.classList.add('anat'); preset('wrong'); toStage(); });
+  document.querySelectorAll('[data-show]').forEach(function(b){
+    b.addEventListener('click',function(){ var v=b.getAttribute('data-show'); if(v==='splash'){S.screen='splash'; render();} else preset(v); toStage(); });
+  });
+  render();
+})();
+</script>

@@ -1,0 +1,175 @@
+{
+  "heroes": [
+    {
+      "id": 14,
+      "name": "Pudge",
+      "primary_attr": "str",
+      "attack_type": "Melee",
+      "win_rate": 53.4,
+      "pick_rate": 26.8,
+      "tier": "S",
+      "roles": ["Disabler", "Initiator", "Durable", "Nuker"],
+      "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png",
+      "bio": "На Полях Вічної Різанини глибоко на південь від Квойджа гладкий м'ясник працює невпинно, збираючи мертві тіла...",
+      "ai_summary": "Найпопулярніший герой пабліків. Високий темп завдяки ранньому роумінгу через Meat Hook.",
+      "stats": {
+        "base_hp": 700,
+        "base_mana": 267,
+        "base_armor": 1.5,
+        "movement_speed": 280,
+        "damage": "70-76"
+      },
+      "abilities": [
+        {
+          "id": "meat_hook",
+          "name": "Meat Hook",
+          "description": "Запускає кривавий гак у вказану точку, що притягує першого юніта та завдає чистої шкоди ворогам.",
+          "cooldown": "18/16/14/12",
+          "mana_cost": "110/120/130/140",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_meat_hook.png",
+          "slot_order": 1
+        },
+        {
+          "id": "rot",
+          "name": "Rot",
+          "description": "Токсична хмара, що завдає постійної шкоди навколишнім ворогам та сповільнює їх, також завдаючи шкоди самому Pudge.",
+          "cooldown": "0",
+          "mana_cost": "0",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_rot.png",
+          "slot_order": 2
+        },
+        {
+          "id": "flesh_heap",
+          "name": "Flesh Heap",
+          "description": "Дає Pudge пасивну стійкість до магії та збільшує силу за кожного вбитого неподалік ворожого героя.",
+          "cooldown": "20",
+          "mana_cost": "35/40/45/50",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_flesh_heap.png",
+          "slot_order": 3
+        },
+        {
+          "id": "dismember",
+          "name": "Dismember",
+          "description": "Pudge шматує ворожого юніта, знерухомлюючи його та завдаючи періодичної шкоди, водночас виліковуючи себе.",
+          "cooldown": "30/25/20",
+          "mana_cost": "100/130/170",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_dismember.png",
+          "slot_order": 4
+        }
+      ],
+      "ai_build": {
+        "skill_order": ["Meat Hook", "Rot", "Meat Hook", "Flesh Heap", "Meat Hook", "Dismember"],
+        "core_items": ["Phase Boots", "Aghanim's Scepter", "Blink Dagger", "Black King Bar"],
+        "tactics": "Тримайте позицію в тумані війни для хука. Після вдалого притягування відразу вмикайте Rot та використовуйте Dismember. У міргаймі купуйте Blink Dagger для миттєвої ініціації."
+      }
+    },
+    {
+      "id": 8,
+      "name": "Juggernaut",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
+      "win_rate": 51.8,
+      "pick_rate": 18.2,
+      "tier": "A",
+      "roles": ["Carry", "Pusher", "Escape"],
+      "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png",
+      "bio": "Ніхто не бачив обличчя, прихованого під маскою Юрнеро. Про нього ходять чутки, що він — останній майстер острова Масок...",
+      "ai_summary": "Стабільний керрі для швидкого пушу. Вразливий до контролю через імунітет до магії (BKB-pierce).",
+      "stats": {
+        "base_hp": 604,
+        "base_mana": 243,
+        "base_armor": 4.0,
+        "movement_speed": 305,
+        "damage": "50-54"
+      },
+      "abilities": [
+        {
+          "id": "blade_fury",
+          "name": "Blade Fury",
+          "description": "Вихор зі смертоносних ударів клинка, який робить Juggernaut несприйнятливим до магії та завдає шкоди навколишнім ворогам.",
+          "cooldown": "42/34/26/18",
+          "mana_cost": "120/110/100/90",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/juggernaut_blade_fury.png",
+          "slot_order": 1
+        },
+        {
+          "id": "healing_ward",
+          "name": "Healing Ward",
+          "description": "Закликає тотем, що зцілює всіх союзників неподалік у відсотках від їхнього максимального здоров'я.",
+          "cooldown": "60",
+          "mana_cost": "140/130/120/110",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/juggernaut_healing_ward.png",
+          "slot_order": 2
+        },
+        {
+          "id": "blade_dance",
+          "name": "Blade Dance",
+          "description": "Пасивний шанс завдати критичної шкоди при кожній атаці.",
+          "cooldown": "0",
+          "mana_cost": "0",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/juggernaut_blade_dance.png",
+          "slot_order": 3
+        },
+        {
+          "id": "omnislash",
+          "name": "Omnislash",
+          "description": "Juggernaut робить стрибок до цілі, завдаючи серії нищівних ударів зі збільшеною швидкістю атаки.",
+          "cooldown": "130",
+          "mana_cost": "200/275/350",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/juggernaut_omni_slash.png",
+          "slot_order": 4
+        }
+      ],
+      "ai_build": {
+        "skill_order": ["Blade Fury", "Blade Dance", "Blade Fury", "Healing Ward", "Blade Fury", "Omnislash"],
+        "core_items": ["Phase Boots", "Maelstrom", "Manta Style", "Butterfly"],
+        "tactics": "Використовуйте Blade Fury для агресивного тиску на лінії та сейву за допомогою телепорту. Omnislash застосовуйте тільки на ізольованих ворогів або після того, як розчищено кріпів."
+      }
+    },
+    {
+      "id": 74,
+      "name": "Invoker",
+      "primary_attr": "all",
+      "attack_type": "Ranged",
+      "win_rate": 50.1,
+      "pick_rate": 14.5,
+      "tier": "A",
+      "roles": ["Carry", "Nuker", "Disabler", "Escape"],
+      "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/invoker.png",
+      "bio": "У своїй найдавнішій формі магія була переважно мистецтвом пам'яті. Вона не вимагала технологій, жезлів чи інших пристосувань...",
+      "ai_summary": "Універсальний мідлейнер з колосальним лейтовим прокастом. Вимагає високого мікроконтролю.",
+      "stats": {
+        "base_hp": 538,
+        "base_mana": 251,
+        "base_armor": 1.2,
+        "movement_speed": 285,
+        "damage": "42-48"
+      },
+      "abilities": [
+        {
+          "id": "sun_strike",
+          "name": "Sun Strike",
+          "description": "Посилає нищівний промінь сонця у будь-яку точку карти після невеликої затримки, завдаючи чистої шкоди усім ворогам у зоні ураження.",
+          "cooldown": "25",
+          "mana_cost": "175",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_sun_strike.png",
+          "slot_order": 1
+        },
+        {
+          "id": "chaos_meteor",
+          "name": "Chaos Meteor",
+          "description": "Скидає з неба вогняний метеорит, що котиться вперед і підпалює все на своєму шляху.",
+          "cooldown": "55/50/45/40",
+          "mana_cost": "200",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_chaos_meteor.png",
+          "slot_order": 2
+        }
+      ],
+      "ai_build": {
+        "skill_order": ["Quas", "Exort", "Quas", "Exort", "Exort", "Wex"],
+        "core_items": ["Power Treads", "Hand of Midas", "Aghanim's Scepter", "Refresher Orb"],
+        "tactics": "Слідкуйте за картою для снайперських Sun Strike по лініях. У командних битвах комбінуйте Tornado з Chaos Meteor та Deafening Blast."
+      }
+    }
+  ]
+}

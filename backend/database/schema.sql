@@ -1,47 +1,39 @@
--- SQL Схема для Kakatone Dota Guide (PostgreSQL / SQLite сумісна)
-
-CREATE TABLE IF NOT EXISTS games (
-    id VARCHAR(50) PRIMARY KEY,
-    slug VARCHAR(50) UNIQUE NOT NULL,
-    title VARCHAR(100) NOT NULL,
-    description TEXT,
-    icon_url TEXT,
-    banner_url TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- SQLite Схема для MangoData (чистий SQLite3)
+PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS heroes (
-    id INT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    primary_attr VARCHAR(50),
-    win_rate NUMERIC(5, 2),
-    pick_rate NUMERIC(5, 2),
-    tier VARCHAR(5),
-    roles TEXT[],
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    primary_attr TEXT,
+    win_rate REAL,
+    pick_rate REAL,
+    tier TEXT,
+    roles TEXT,             -- Зберігається як JSON-масив рядків: '["Disabler","Initiator"]'
     avatar_url TEXT,
     bio TEXT,
+    stats TEXT,             -- Зберігається як JSON-об'єкт: '{"base_hp": 700, "base_mana": 267}'
     ai_summary TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS abilities (
-    id VARCHAR(50) PRIMARY KEY,
-    hero_id INT NOT NULL REFERENCES heroes(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
+    id TEXT PRIMARY KEY,
+    hero_id INTEGER NOT NULL REFERENCES heroes(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
     description TEXT,
-    cooldown VARCHAR(50),
-    mana_cost VARCHAR(50),
+    cooldown TEXT,
+    mana_cost TEXT,
     icon_url TEXT,
-    slot_order INT DEFAULT 0
+    slot_order INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS ai_builds (
-    id SERIAL PRIMARY KEY,
-    hero_id INT UNIQUE NOT NULL REFERENCES heroes(id) ON DELETE CASCADE,
-    skill_order TEXT[],
-    core_items TEXT[],
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    hero_id INTEGER UNIQUE NOT NULL REFERENCES heroes(id) ON DELETE CASCADE,
+    skill_order TEXT,       -- Зберігається як JSON-масив: '["Meat Hook","Rot"]'
+    core_items TEXT,        -- Зберігається як JSON-масив: '["Phase Boots","Blink Dagger"]'
     tactics TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_heroes_tier ON heroes(tier);

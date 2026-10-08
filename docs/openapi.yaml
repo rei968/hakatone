@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: Kakatone Dota/Gaming Guide API
-  description: Dart Shelf REST API з інтеграцією OpenDota та Claude AI для мобільного клієнта (Flutter).
+  title: MangoData API
+  description: Dart Shelf REST API (SQLite + OpenDota + Claude AI) для мобільного клієнта MangoData (Flutter).
   version: 1.0.0
 servers:
   - url: http://localhost:8080

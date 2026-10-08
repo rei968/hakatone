@@ -1,28 +1,18 @@
 {
-  "game": {
-    "id": "dota2",
-    "slug": "dota2",
-    "title": "Dota 2",
-    "developer": "Valve",
-    "genre": "MOBA",
-    "description": "Легендарна командна стратегічна гра в реальному часі від Valve.",
-    "iconUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/global/dota2_logo_symbol.png",
-    "bannerUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/blog/dota_banner.jpg"
-  },
   "heroes": [
     {
-      "id": "pudge",
+      "id": 14,
       "name": "Pudge",
-      "primaryAttribute": "Strength",
-      "attackType": "Melee",
+      "primary_attr": "str",
+      "attack_type": "Melee",
       "roles": ["Disabler", "Initiator", "Durable", "Nuker"],
-      "avatarUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png",
+      "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png",
       "bio": "На Полях Вічної Різанини глибоко на південь від Квойджа гладкий м'ясник працює невпинно, збираючи мертві тіла...",
       "stats": {
-        "baseHp": 700,
-        "baseMana": 267,
-        "baseArmor": 1.5,
-        "movementSpeed": 280,
+        "base_hp": 700,
+        "base_mana": 267,
+        "base_armor": 1.5,
+        "movement_speed": 280,
         "damage": "70-76"
       },
       "abilities": [
@@ -31,48 +21,52 @@
           "name": "Meat Hook",
           "description": "Запускає кривавий гак у вказану точку, що притягує першого юніта та завдає чистої шкоди ворогам.",
           "cooldown": "18/16/14/12",
-          "manaCost": "110/120/130/140",
-          "iconUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_meat_hook.png"
+          "mana_cost": "110/120/130/140",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_meat_hook.png",
+          "slot_order": 1
         },
         {
           "id": "rot",
           "name": "Rot",
           "description": "Токсична хмара, що завдає постійної шкоди навколишнім ворогам та сповільнює їх, також завдаючи шкоди самому Pudge.",
           "cooldown": "0",
-          "manaCost": "0",
-          "iconUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_rot.png"
+          "mana_cost": "0",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_rot.png",
+          "slot_order": 2
         },
         {
           "id": "flesh_heap",
           "name": "Flesh Heap",
           "description": "Дає Pudge пасивну стійкість до магії та збільшує силу за кожного вбитого неподалік ворожого героя.",
           "cooldown": "20",
-          "manaCost": "35/40/45/50",
-          "iconUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_flesh_heap.png"
+          "mana_cost": "35/40/45/50",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_flesh_heap.png",
+          "slot_order": 3
         },
         {
           "id": "dismember",
           "name": "Dismember",
           "description": "Pudge шматує ворожого юніта, знерухомлюючи його та завдаючи періодичної шкоди, водночас виліковуючи себе.",
           "cooldown": "30/25/20",
-          "manaCost": "100/130/170",
-          "iconUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_dismember.png"
+          "mana_cost": "100/130/170",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_dismember.png",
+          "slot_order": 4
         }
       ]
     },
     {
-      "id": "juggernaut",
+      "id": 8,
       "name": "Juggernaut",
-      "primaryAttribute": "Agility",
-      "attackType": "Melee",
+      "primary_attr": "agi",
+      "attack_type": "Melee",
       "roles": ["Carry", "Pusher", "Escape"],
-      "avatarUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png",
+      "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png",
       "bio": "Ніхто не бачив обличчя, прихованого під маскою Юрнеро. Про нього ходять чутки, що він — останній майстер острова Масок...",
       "stats": {
-        "baseHp": 604,
-        "baseMana": 243,
-        "baseArmor": 4.0,
-        "movementSpeed": 305,
+        "base_hp": 604,
+        "base_mana": 243,
+        "base_armor": 4.0,
+        "movement_speed": 305,
         "damage": "50-54"
       },
       "abilities": [
@@ -81,32 +75,34 @@
           "name": "Blade Fury",
           "description": "Вихор зі смертоносних ударів клинка, який робить Juggernaut несприйнятливим до магії та завдає шкоди навколишнім ворогам.",
           "cooldown": "42/34/26/18",
-          "manaCost": "120/110/100/90",
-          "iconUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/juggernaut_blade_fury.png"
+          "mana_cost": "120/110/100/90",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/juggernaut_blade_fury.png",
+          "slot_order": 1
         },
         {
           "id": "omnislash",
           "name": "Omnislash",
           "description": "Juggernaut робить стрибок до цілі, завдаючи серії нищівних ударів зі збільшеною швидкістю атаки.",
           "cooldown": "130",
-          "manaCost": "200/275/350",
-          "iconUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/juggernaut_omni_slash.png"
+          "mana_cost": "200/275/350",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/juggernaut_omni_slash.png",
+          "slot_order": 4
         }
       ]
     },
     {
-      "id": "invoker",
+      "id": 74,
       "name": "Invoker",
-      "primaryAttribute": "Intelligence",
-      "attackType": "Ranged",
+      "primary_attr": "all",
+      "attack_type": "Ranged",
       "roles": ["Carry", "Nuker", "Disabler", "Escape"],
-      "avatarUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/invoker.png",
+      "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/invoker.png",
       "bio": "У своїй найдавнішій формі магія була переважно мистецтвом пам'яті. Вона не вимагала технологій, жезлів чи інших пристосувань...",
       "stats": {
-        "baseHp": 538,
-        "baseMana": 251,
-        "baseArmor": 1.2,
-        "movementSpeed": 285,
+        "base_hp": 538,
+        "base_mana": 251,
+        "base_armor": 1.2,
+        "movement_speed": 285,
         "damage": "42-48"
       },
       "abilities": [
@@ -115,8 +111,9 @@
           "name": "Sun Strike",
           "description": "Посилає нищівний промінь сонця у будь-яку точку карти після невеликої затримки, завдаючи чистої шкоди усім ворогам у зоні ураження.",
           "cooldown": "25",
-          "manaCost": "175",
-          "iconUrl": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_sun_strike.png"
+          "mana_cost": "175",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_sun_strike.png",
+          "slot_order": 1
         }
       ]
     }

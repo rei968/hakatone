@@ -1,56 +1,51 @@
-# Схема Бази Даних (ERD) - Kakatone Dota Guide
+# Схема Бази Даних (SQLite ERD) - MangoData
 
-Документ для розробника **Бекенд (База даних - YY)**.
+База даних: **SQLite 3**  
+Відповідальний: **Бекенд (База даних - YY)**
 
-## Діаграма зв'язків сутностей (Mermaid ERD)
+## Діаграма сутностей SQLite
 
 ```mermaid
 erDiagram
-    GAMES ||--o{ HEROES : contains
     HEROES ||--o{ ABILITIES : has
     HEROES ||--|| AI_BUILDS : generated_for
 
-    GAMES {
-        string id PK
-        string slug UK
-        string title
-        string description
-        string icon_url
-        string banner_url
-        timestamp created_at
-    }
-
     HEROES {
-        int id PK
-        string name
-        string primary_attr
-        float win_rate
-        float pick_rate
-        string tier
-        array roles
-        string avatar_url
-        text bio
-        text ai_summary
-        timestamp created_at
+        int id PK "Steam / OpenDota hero_id (14, 8, 74...)"
+        text name "Назва героя (Pudge, Invoker...)"
+        text primary_attr "str, agi, int, all"
+        real win_rate "Вінрейт, наприклад 53.4"
+        real pick_rate "Пікрейт, наприклад 26.8"
+        text tier "S, A, B, C"
+        text roles "JSON масив: ['Disabler','Initiator']"
+        text avatar_url "Посилання на аватар"
+        text bio "Лор героя"
+        text stats "JSON об'єкт: {'base_hp':700,'base_mana':267}"
+        text ai_summary "Короткий опис від Claude AI"
+        datetime created_at
     }
 
     ABILITIES {
-        string id PK
-        int hero_id FK
-        string name
-        text description
-        string cooldown
-        string mana_cost
-        string icon_url
-        int slot_order
+        text id PK "meat_hook, rot..."
+        int hero_id FK "heroes.id (CASCADE)"
+        text name "Назва здібності"
+        text description "Опис скіла"
+        text cooldown "Кулдаун"
+        text mana_cost "Манакост"
+        text icon_url "Посилання на іконку"
+        int slot_order "Порядок слота (1, 2, 3, 4)"
     }
 
     AI_BUILDS {
-        int id PK
-        int hero_id FK
-        array skill_order
-        array core_items
-        text tactics
-        timestamp updated_at
+        int id PK "AUTOINCREMENT"
+        int hero_id FK "heroes.id (UNIQUE, CASCADE)"
+        text skill_order "JSON масив: ['Meat Hook','Rot']"
+        text core_items "JSON масив: ['Phase Boots','Blink']"
+        text tactics "Тактичні поради від Claude API"
+        datetime updated_at
     }
 ```
+
+## Особливості реалізації в SQLite:
+1. Масиви та вкладені об'єкти (`roles`, `stats`, `skill_order`, `core_items`) зберігаються як валідні JSON-рядки у полях типу `TEXT`.
+2. Увімкнення Foreign Keys у Shelf-сервері: перед виконанням запитів викликати `PRAGMA foreign_keys = ON;`.

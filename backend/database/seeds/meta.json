@@ -1,6 +1,8 @@
 {
   "updated_at": "2026-10-08T09:00:00Z",
-  "patch": "7.37d",
+  "patch": "7.41",
+  "rank": "all",
+  "total_matches": 3978299,
   "meta_heroes": [
     {
       "id": 14,
@@ -8,10 +10,13 @@
       "win_rate": 53.4,
       "pick_rate": 26.8,
       "primary_attr": "str",
+      "attack_type": "Melee",
       "roles": ["Disabler", "Initiator", "Durable", "Nuker"],
       "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png",
       "tier": "S",
-      "ai_summary": "Найпопулярніший герой пабліків. Високий темп завдяки ранньому роумінгу через Meat Hook."
+      "ai_summary": "Найпопулярніший герой пабліків. Високий темп завдяки ранньому роумінгу через Meat Hook.",
+      "matches": 1083446,
+      "win_rate_delta": 0.0
     },
     {
       "id": 8,
@@ -19,10 +24,13 @@
       "win_rate": 51.8,
       "pick_rate": 18.2,
       "primary_attr": "agi",
+      "attack_type": "Melee",
       "roles": ["Carry", "Pusher", "Escape"],
       "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png",
       "tier": "A",
-      "ai_summary": "Стабільний керрі для швидкого пушу. Вразливий до контролю через імунітет до магії (BKB-pierce)."
+      "ai_summary": "Стабільний керрі для швидкого пушу. Вразливий до контролю через імунітет до магії (BKB-pierce).",
+      "matches": 742719,
+      "win_rate_delta": 0.1
     },
     {
       "id": 74,
@@ -30,10 +38,13 @@
       "win_rate": 50.1,
       "pick_rate": 14.5,
       "primary_attr": "all",
+      "attack_type": "Ranged",
       "roles": ["Carry", "Nuker", "Disabler", "Escape"],
       "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/invoker.png",
       "tier": "A",
-      "ai_summary": "Універсальний мідлейнер з колосальним лейтовим прокастом. Вимагає високого мікроконтролю."
+      "ai_summary": "Універсальний мідлейнер з колосальним лейтовим прокастом. Вимагає високого мікроконтролю.",
+      "matches": 723714,
+      "win_rate_delta": 0.1
     }
   ]
 }

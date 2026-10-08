@@ -12,6 +12,8 @@
       "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png",
       "bio": "На Полях Вічної Різанини глибоко на південь від Квойджа гладкий м'ясник працює невпинно, збираючи мертві тіла...",
       "ai_summary": "Найпопулярніший герой пабліків. Високий темп завдяки ранньому роумінгу через Meat Hook.",
+      "matches": 1083446,
+      "win_rate_delta": 0.0,
       "stats": {
         "base_hp": 700,
         "base_mana": 267,
@@ -39,11 +41,11 @@
           "slot_order": 2
         },
         {
-          "id": "flesh_heap",
-          "name": "Flesh Heap",
-          "description": "Дає Pudge пасивну стійкість до магії та збільшує силу за кожного вбитого неподалік ворожого героя.",
-          "cooldown": "20",
-          "mana_cost": "35/40/45/50",
+          "id": "meat_shield",
+          "name": "Meat Shield",
+          "description": "Pudge вкривається шаром плоті, що блокує шкоду будь-якого типу з будь-якого джерела.",
+          "cooldown": "20/19/18/17",
+          "mana_cost": "65/70/75/80",
           "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_flesh_heap.png",
           "slot_order": 3
         },
@@ -58,8 +60,22 @@
         }
       ],
       "ai_build": {
-        "skill_order": ["Meat Hook", "Rot", "Meat Hook", "Flesh Heap", "Meat Hook", "Dismember"],
-        "core_items": ["Phase Boots", "Aghanim's Scepter", "Blink Dagger", "Black King Bar"],
+        "skill_order": ["Meat Hook", "Rot", "Meat Hook", "Meat Shield", "Meat Hook", "Dismember",
+                        "Meat Hook", "Rot", "Rot", "L", "Rot", "Dismember",
+                        "Meat Shield", "Meat Shield", "R", "Meat Shield", "-", "Dismember"],
+        "talents": [
+          {"level": 10, "side": "L", "name": "Rot Slow"},
+          {"level": 15, "side": "R", "name": "+8% Spell Lifesteal"},
+          {"level": 20, "side": "L", "name": "Meat Hook Cooldown"},
+          {"level": 25, "side": "R", "name": "Dismember Damage/Heal"}
+        ],
+        "core_items": ["Phase Boots", "Blink Dagger", "Aghanim's Scepter", "Shiva's Guard", "Black King Bar"],
+        "item_timings": {"Phase Boots": 575, "Blink Dagger": 1145, "Aghanim's Scepter": 1354, "Shiva's Guard": 1606, "Black King Bar": 1650},
+        "situational_items": [
+          {"name": "Force Staff", "reason": "Порятунок союзників і втеча"},
+          {"name": "Pipe of Insight", "reason": "Проти магічної шкоди по команді"},
+          {"name": "Lotus Orb", "reason": "Проти цільового контролю"}
+        ],
         "tactics": "Тримайте позицію в тумані війни для хука. Після вдалого притягування відразу вмикайте Rot та використовуйте Dismember. У міргаймі купуйте Blink Dagger для миттєвої ініціації."
       }
     },
@@ -75,6 +91,8 @@
       "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png",
       "bio": "Ніхто не бачив обличчя, прихованого під маскою Юрнеро. Про нього ходять чутки, що він — останній майстер острова Масок...",
       "ai_summary": "Стабільний керрі для швидкого пушу. Вразливий до контролю через імунітет до магії (BKB-pierce).",
+      "matches": 742719,
+      "win_rate_delta": 0.1,
       "stats": {
         "base_hp": 604,
         "base_mana": 243,
@@ -121,8 +139,22 @@
         }
       ],
       "ai_build": {
-        "skill_order": ["Blade Fury", "Blade Dance", "Blade Fury", "Healing Ward", "Blade Fury", "Omnislash"],
-        "core_items": ["Phase Boots", "Maelstrom", "Manta Style", "Butterfly"],
+        "skill_order": ["Blade Fury", "Blade Dance", "Blade Fury", "Healing Ward", "Blade Fury", "Omnislash",
+                        "Blade Fury", "Blade Dance", "Blade Dance", "R", "Blade Dance", "Omnislash",
+                        "Healing Ward", "Healing Ward", "L", "Healing Ward", "-", "Omnislash"],
+        "talents": [
+          {"level": 10, "side": "R", "name": "-12s Healing Ward Cooldown"},
+          {"level": 15, "side": "L", "name": "45 Movement Speed During Blade Fury"},
+          {"level": 20, "side": "R", "name": "+15% Blade Dance Crit Damage"},
+          {"level": 25, "side": "L", "name": "+40% Blade Dance Lifesteal"}
+        ],
+        "core_items": ["Phase Boots", "Maelstrom", "Manta Style", "Abyssal Blade", "Butterfly"],
+        "item_timings": {"Phase Boots": 519, "Maelstrom": 914, "Manta Style": 1414, "Abyssal Blade": 1571, "Butterfly": 1669},
+        "situational_items": [
+          {"name": "Black King Bar", "reason": "Проти контролю й магії"},
+          {"name": "Monkey King Bar", "reason": "Проти ухилення"},
+          {"name": "Aeon Disk", "reason": "Проти бурсту"}
+        ],
         "tactics": "Використовуйте Blade Fury для агресивного тиску на лінії та сейву за допомогою телепорту. Omnislash застосовуйте тільки на ізольованих ворогів або після того, як розчищено кріпів."
       }
     },
@@ -138,6 +170,8 @@
       "avatar_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/invoker.png",
       "bio": "У своїй найдавнішій формі магія була переважно мистецтвом пам'яті. Вона не вимагала технологій, жезлів чи інших пристосувань...",
       "ai_summary": "Універсальний мідлейнер з колосальним лейтовим прокастом. Вимагає високого мікроконтролю.",
+      "matches": 723714,
+      "win_rate_delta": 0.1,
       "stats": {
         "base_hp": 538,
         "base_mana": 251,
@@ -147,13 +181,49 @@
       },
       "abilities": [
         {
+          "id": "quas",
+          "name": "Quas",
+          "description": "Керування стихією льоду. Активні сфери Quas дають регенерацію здоров'я, кожен рівень пасивно додає силу.",
+          "cooldown": "0",
+          "mana_cost": "0",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_quas.png",
+          "slot_order": 1
+        },
+        {
+          "id": "wex",
+          "name": "Wex",
+          "description": "Керування стихією бурі. Активні сфери Wex дають швидкість руху й атаки, кожен рівень пасивно додає спритність.",
+          "cooldown": "0",
+          "mana_cost": "0",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_wex.png",
+          "slot_order": 2
+        },
+        {
+          "id": "exort",
+          "name": "Exort",
+          "description": "Керування стихією вогню. Активні сфери Exort дають шкоду атаки, кожен рівень пасивно додає інтелект.",
+          "cooldown": "0",
+          "mana_cost": "0",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_exort.png",
+          "slot_order": 3
+        },
+        {
+          "id": "invoke",
+          "name": "Invoke",
+          "description": "Поєднує активні сфери й створює з них нове закляття, яке Invoker може використати.",
+          "cooldown": "7",
+          "mana_cost": "0",
+          "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_invoke.png",
+          "slot_order": 4
+        },
+        {
           "id": "sun_strike",
           "name": "Sun Strike",
           "description": "Посилає нищівний промінь сонця у будь-яку точку карти після невеликої затримки, завдаючи чистої шкоди усім ворогам у зоні ураження.",
           "cooldown": "25",
           "mana_cost": "175",
           "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_sun_strike.png",
-          "slot_order": 1
+          "slot_order": 5
         },
         {
           "id": "chaos_meteor",
@@ -162,12 +232,26 @@
           "cooldown": "55/50/45/40",
           "mana_cost": "200",
           "icon_url": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/invoker_chaos_meteor.png",
-          "slot_order": 2
+          "slot_order": 6
         }
       ],
       "ai_build": {
-        "skill_order": ["Quas", "Exort", "Quas", "Exort", "Exort", "Wex"],
-        "core_items": ["Power Treads", "Hand of Midas", "Aghanim's Scepter", "Refresher Orb"],
+        "skill_order": ["Exort", "Quas", "Exort", "Wex", "Exort", "Quas",
+                        "Exort", "Quas", "Exort", "L", "Exort", "Quas",
+                        "Wex", "Wex", "R", "Wex", "-", "Wex"],
+        "talents": [
+          {"level": 10, "side": "L", "name": "Tornado Cooldown"},
+          {"level": 15, "side": "R", "name": "Alacrity Damage/Speed"},
+          {"level": 20, "side": "R", "name": "Chaos Meteors"},
+          {"level": 25, "side": "L", "name": "Quas/Wex/Exort Active Bonuses"}
+        ],
+        "core_items": ["Hand of Midas", "Boots of Travel", "Aghanim's Scepter", "Octarine Core", "Black King Bar"],
+        "item_timings": {"Hand of Midas": 895, "Boots of Travel": 1130, "Aghanim's Scepter": 1507, "Octarine Core": 1541, "Black King Bar": 1620},
+        "situational_items": [
+          {"name": "Scythe of Vyse", "reason": "Проти мобільних героїв"},
+          {"name": "Linken's Sphere", "reason": "Проти цільового контролю"},
+          {"name": "Aeon Disk", "reason": "Проти бурсту"}
+        ],
         "tactics": "Слідкуйте за картою для снайперських Sun Strike по лініях. У командних битвах комбінуйте Tornado з Chaos Meteor та Deafening Blast."
       }
     }

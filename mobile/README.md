@@ -1,11 +1,11 @@
-# Mobile Client - Kakatone Dota Guide
+# Mobile Client - MangoData
 
-Кроссплатформений мобільний застосунок на **Flutter** (`dio`, `Riverpod`, локальний кеш у `Hive`).
+Кроссплатформений мобільний застосунок **MangoData** на **Flutter** (`dio`, `Riverpod`, локальний кеш у `Hive`).
 
 ## 💡 Важливо для розробника Mobile (TY - Contract-First підхід)
 Вам **НЕ потрібно чекати**, поки бекенд буде повністю готовий!
 1. Усі готові тестові дані знаходяться тут:
-   - `../backend/database/seeds/dota2.json` (герої та здібності)
+   - `../backend/database/seeds/dota2.json` (герої з числовими id `14`, `8`, `74` та полями у `snake_case`)
    - `../backend/database/seeds/meta.json` (актуальна мета та вінрейти)
 2. Ви можете підключити ці JSON безпосередньо у Flutter-застосунок як локальні Assets/Mock і верстати екрани прямо зараз.
 3. Опис полів та структури API описаний у `../docs/openapi.yaml`.

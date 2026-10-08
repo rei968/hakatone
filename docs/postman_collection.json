@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "Kakatone Dota Guide API",
-    "description": "Тестова колекція для QA (ЖЕ) для перевірки всіх ендпоінтів сервера",
+    "name": "MangoData API",
+    "description": "Тестова колекція для QA (ЖЕ) для перевірки всіх ендпоінтів сервера MangoData",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

@@ -20,7 +20,6 @@ coverage/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
-pubspec.lock
 **/.packages
 **/flutter_export_environment.sh
 build/

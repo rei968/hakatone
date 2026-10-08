@@ -2,19 +2,12 @@ import 'dart:async';
 
 import 'package:backend/ai/hero_analyzer.dart';
 import 'package:backend/db/app_database.dart';
+import 'package:backend/meta/hero_stats.dart';
 import 'package:backend/opendota/opendota_client.dart';
 
 const _steamCdn = 'https://cdn.cloudflare.steamstatic.com';
 
 typedef SyncResult = ({DateTime syncedAt, int heroesUpdated});
-
-/// Tier is computed from win rate in code, not by AI.
-String tierForWinRate(double winRate) => switch (winRate) {
-      >= 53 => 'S',
-      >= 50 => 'A',
-      >= 48 => 'B',
-      _ => 'C',
-    };
 
 /// Pulls hero stats from OpenDota into the heroes table and refreshes AI builds for demo heroes.
 class HeroSync {
@@ -56,8 +49,18 @@ class HeroSync {
     final heroes = [for (final h in stats) _heroFromStats(h, totalPicks / 10)];
 
     final updated = _db.upsertHeroes(heroes);
+    await _refreshPatch();
     await _refreshDemoAnalyses();
     return (syncedAt: DateTime.now().toUtc(), heroesUpdated: updated);
+  }
+
+  /// A failed request keeps the previous patch (or the seed value before the first success).
+  Future<void> _refreshPatch() async {
+    try {
+      _db.savePatch(await _openDota.latestPatch());
+    } catch (e) {
+      print('sync: patch not updated, keeping the previous one: $e');
+    }
   }
 
   /// A failed analysis keeps the previous build (seed or earlier AI result) and doesn't fail the sync.
@@ -76,9 +79,7 @@ class HeroSync {
 
 Map<String, Object?> _heroFromStats(Map<String, dynamic> h, num totalMatches) {
   final picks = (h['pub_pick'] as num?) ?? 0;
-  final wins = (h['pub_win'] as num?) ?? 0;
-  final winRate = picks > 0 ? _round1(wins / picks * 100) : null;
-  final pickRate = totalMatches > 0 ? _round1(picks / totalMatches * 100) : null;
+  final numbers = rateNumbers(picks: picks, wins: (h['pub_win'] as num?) ?? 0, totalPicks: totalMatches * 10);
   final img = h['img'] as String?;
 
   return {
@@ -86,13 +87,16 @@ Map<String, Object?> _heroFromStats(Map<String, dynamic> h, num totalMatches) {
     'name': h['localized_name'],
     'primary_attr': h['primary_attr'],
     'attack_type': h['attack_type'],
-    'win_rate': winRate,
-    'pick_rate': pickRate,
-    'tier': winRate == null ? null : tierForWinRate(winRate),
+    'win_rate': numbers.winRate,
+    'pick_rate': numbers.pickRate,
+    'tier': numbers.tier,
     'roles': h['roles'],
     // img comes as "/apps/.../pudge.png?", drop the trailing '?'.
     'avatar_url': img == null ? null : '$_steamCdn${img.replaceFirst(RegExp(r'\?$'), '')}',
     'stats': _levelOneStats(h),
+    'matches': picks.toInt(),
+    'win_rate_delta': winRateDelta(h['pub_pick_trend'] as List?, h['pub_win_trend'] as List?),
+    'rank_stats': rankStatsFromHeroStats(h),
   };
 }
 
@@ -111,10 +115,9 @@ Map<String, Object?> _levelOneStats(Map<String, dynamic> h) {
   return {
     'base_hp': (stat('base_health') + str * 22).round(),
     'base_mana': (stat('base_mana') + intel * 12).round(),
-    'base_armor': _round1(stat('base_armor') + agi / 6),
+    'base_armor': round1(stat('base_armor') + agi / 6),
     'movement_speed': stat('move_speed'),
     'damage': '${stat('base_attack_min') + damageBonus}-${stat('base_attack_max') + damageBonus}',
   };
 }
 
-double _round1(num value) => (value * 10).round() / 10;

@@ -37,5 +37,12 @@ CREATE TABLE IF NOT EXISTS ai_builds (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,            -- "usr_" + 16 hex, як user.id в AuthResponse
+    email TEXT UNIQUE NOT NULL,     -- у нижньому регістрі
+    password_hash TEXT NOT NULL,    -- pbkdf2_sha256$<iterations>$<salt>$<hash>
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_heroes_tier ON heroes(tier);
 CREATE INDEX IF NOT EXISTS idx_abilities_hero_id ON abilities(hero_id);

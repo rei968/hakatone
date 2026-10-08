@@ -31,7 +31,7 @@
 ## 5. POST /admin/sync (ручний запуск для демо) (на перевірці)
 - [x] Відповідь `{status, synced_at, heroes_updated}`, 502 при помилці
 - [x] Паралельні виклики чекають один і той самий запуск
-- Захист токеном зробимо разом з авторизацією
+- [x] Захищено Bearer-токеном з `/api/auth/login` (розділ 8)
 
 ## 6. Реалізація AI-аналізу (Gemini замість Claude API) (на перевірці)
 - [x] `gemini-3.5-flash-lite` через Google AI Studio, ключ у `GEMINI_API_KEY`
@@ -53,7 +53,15 @@
 - Безкоштовний інстанс засинає без запитів, перед демо його треба «розбудити»
 
 ## 8. Реалізація авторизації
-- [ ] `/api/auth/*`, в останню чергу
+- [x] Таблиця `users` у `schema.sql` (YY, глянь)
+- [x] `POST /api/auth/register`: 201 + JWT; 400 з кодом `email_taken`, `invalid_email`, `password_too_short`
+- [x] `POST /api/auth/login`: 200 + JWT; 401 `invalid_credentials`
+- [x] Паролі через PBKDF2-HMAC-SHA256 (20 000 ітерацій, сіль), JWT HS256 на 7 днів
+- [x] CORS пропускає заголовок `Authorization`
+- [x] `docs/test_endpoints.ps1` проходить усі 5 кроків
+- [~] Коміт у `feature/backend-auth`, ще не запушено
+- [ ] `JWT_SECRET` у змінних середовища на Render
+- Користувачі живуть у SQLite, тож на Render зникають після рестарту
 
 ## Після демо (не потрібно)
 - [ ] Тренди за `pub_pick_trend`

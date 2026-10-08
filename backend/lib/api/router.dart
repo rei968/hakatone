@@ -4,6 +4,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
 import 'package:backend/ai/hero_analyzer.dart';
+import 'package:backend/auth/auth_service.dart';
 import 'package:backend/db/app_database.dart';
 import 'package:backend/db/database_files.dart';
 import 'package:backend/sync/hero_sync.dart';
@@ -28,8 +29,31 @@ Map<String, dynamic>? _seedHero(int id) {
 /// in the background and is cached for the next request.
 const _aiTimeout = Duration(seconds: 25);
 
+/// Parses `{email, password}` and runs [action]; an [AuthError] becomes `{"error": code}`.
+Future<Response> _authCall(
+  Request req,
+  Map<String, Object?> Function(String email, String password) action, {
+  int status = 200,
+}) async {
+  final Object? body;
+  try {
+    body = jsonDecode(await req.readAsString());
+  } on FormatException {
+    return _json({'error': 'invalid_body'}, status: 400);
+  }
+  if (body is! Map || body['email'] is! String || body['password'] is! String) {
+    return _json({'error': 'invalid_body'}, status: 400);
+  }
+
+  try {
+    return _json(action(body['email'] as String, body['password'] as String), status: status);
+  } on AuthError catch (e) {
+    return _json({'error': e.code}, status: e.status);
+  }
+}
+
 /// [analyzer] is null when no AI key is configured: heroes are then served without new builds.
-Router buildRouter(AppDatabase db, HeroSync sync, HeroAnalyzer? analyzer) {
+Router buildRouter(AppDatabase db, HeroSync sync, HeroAnalyzer? analyzer, AuthService auth) {
   final router = Router(
     notFoundHandler: (Request req) => _json({'error': 'not_found'}, status: 404),
   );
@@ -76,8 +100,14 @@ Router buildRouter(AppDatabase db, HeroSync sync, HeroAnalyzer? analyzer) {
     return _json(hero);
   });
 
-  // Manual sync for the demo. No token yet: auth comes last in the plan.
+  router.post('/api/auth/register', (Request req) => _authCall(req, auth.register, status: 201));
+  router.post('/api/auth/login', (Request req) => _authCall(req, auth.login));
+
+  // Manual sync for the demo; needs the JWT from /api/auth/login (docs/test_endpoints.ps1).
   router.post('/admin/sync', (Request req) async {
+    if (auth.userIdFromHeader(req.headers['authorization']) == null) {
+      return _json({'error': 'unauthorized'}, status: 401);
+    }
     try {
       final result = await sync.run();
       return _json({

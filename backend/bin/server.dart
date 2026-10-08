@@ -6,6 +6,9 @@ import 'package:shelf/shelf_io.dart' as io;
 import 'package:backend/ai/gemini_client.dart';
 import 'package:backend/ai/hero_analyzer.dart';
 import 'package:backend/api/middleware.dart';
+import 'package:backend/auth/auth_service.dart';
+import 'package:backend/auth/jwt_service.dart';
+import 'package:backend/auth/password_hasher.dart';
 import 'package:backend/api/router.dart';
 import 'package:backend/db/app_database.dart';
 import 'package:backend/opendota/opendota_client.dart';
@@ -26,11 +29,12 @@ Future<void> main() async {
   if (analyzer == null) print('AI analysis disabled: GEMINI_API_KEY is not set');
 
   final sync = HeroSync(db, openDota, analyzer: analyzer);
+  final auth = AuthService(db, JwtService.fromEnv(env['JWT_SECRET']), PasswordHasher());
 
   final handler = const Pipeline()
       .addMiddleware(logRequests())
       .addMiddleware(cors())
-      .addHandler(buildRouter(db, sync, analyzer).call);
+      .addHandler(buildRouter(db, sync, analyzer, auth).call);
 
   final server = await io.serve(handler, InternetAddress.anyIPv4, port);
   print('Listening on http://localhost:${server.port}');

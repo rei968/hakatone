@@ -110,6 +110,16 @@ class AppDatabase {
     });
   }
 
+  ({String id, String email, String passwordHash})? findUserByEmail(String email) {
+    final rows = _db.select('SELECT id, email, password_hash FROM users WHERE email = ?', [email]);
+    if (rows.isEmpty) return null;
+    final row = rows.first;
+    return (id: row['id'] as String, email: row['email'] as String, passwordHash: row['password_hash'] as String);
+  }
+
+  void createUser({required String id, required String email, required String passwordHash}) =>
+      _db.execute('INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)', [id, email, passwordHash]);
+
   Map<String, Object?> _metaHero(Row row) => {
         'id': row['id'],
         'name': row['name'],

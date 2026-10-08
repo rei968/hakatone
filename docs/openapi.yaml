@@ -1,13 +1,31 @@
 openapi: 3.0.3
 info:
-  title: MangoData API
-  description: Dart Shelf REST API (SQLite + OpenDota + Claude AI) для мобільного клієнта MangoData (Flutter).
+  title: MangoDota API
+  description: Dart Shelf REST API (SQLite + OpenDota + Google Gemini API) для мобільного клієнта MangoDota (Flutter).
   version: 1.0.0
 servers:
   - url: http://localhost:8080
     description: Local Dart (shelf) server
 
 paths:
+  /api/health:
+    get:
+      summary: Health check сервера
+      responses:
+        '200':
+          description: Сервер працює
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    example: "2026-10-08T11:00:00Z"
+
   /api/auth/register:
     post:
       summary: Реєстрація нового користувача
@@ -64,7 +82,7 @@ paths:
 
   /api/meta/dota:
     get:
-      summary: Отримати список героїв актуальної мети (OpenDota + AI tier)
+      summary: Отримати список героїв актуальної мети (OpenDota + Gemini AI tier)
       responses:
         '200':
           description: Актуальний мета-звіт
@@ -75,7 +93,7 @@ paths:
                 properties:
                   updated_at:
                     type: string
-                    example: "2026-10-08T09:00:00Z"
+                    example: "2026-10-08T11:00:00Z"
                   patch:
                     type: string
                     example: "7.37d"
@@ -86,7 +104,7 @@ paths:
 
   /api/dota/heroes/{id}:
     get:
-      summary: Детальна картка героя з AI-білдом від Claude API
+      summary: Детальна картка героя з AI-білдом від Google Gemini API
       parameters:
         - name: id
           in: path
@@ -106,7 +124,7 @@ paths:
 
   /admin/sync:
     post:
-      summary: Ручний запуск синхронізації з OpenDota / Claude (для демо)
+      summary: Ручний запуск синхронізації з OpenDota та оновлення білдів через Gemini (для демо)
       security:
         - BearerAuth: []
       responses:
@@ -122,10 +140,10 @@ paths:
                     example: "ok"
                   synced_at:
                     type: string
-                    example: "2026-10-08T09:05:00Z"
+                    example: "2026-10-08T11:05:00Z"
                   heroes_updated:
                     type: integer
-                    example: 124
+                    example: 127
 
 components:
   securitySchemes:
@@ -169,6 +187,9 @@ components:
         primary_attr:
           type: string
           example: "str"
+        attack_type:
+          type: string
+          example: "Melee"
         roles:
           type: array
           items:
@@ -189,6 +210,27 @@ components:
         - $ref: '#/components/schemas/MetaHero'
         - type: object
           properties:
+            bio:
+              type: string
+              example: "На Полях Вічної Різанини глибоко на південь від Квойджа..."
+            stats:
+              type: object
+              properties:
+                base_hp:
+                  type: integer
+                  example: 700
+                base_mana:
+                  type: integer
+                  example: 267
+                base_armor:
+                  type: number
+                  example: 1.5
+                movement_speed:
+                  type: integer
+                  example: 280
+                damage:
+                  type: string
+                  example: "70-76"
             abilities:
               type: array
               items:
@@ -202,10 +244,19 @@ components:
                     example: "Meat Hook"
                   description:
                     type: string
-                    example: "Запускає гак..."
+                    example: "Запускає кривавий гак..."
+                  cooldown:
+                    type: string
+                    example: "18/16/14/12"
+                  mana_cost:
+                    type: string
+                    example: "110/120/130/140"
                   icon_url:
                     type: string
                     example: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_meat_hook.png"
+                  slot_order:
+                    type: integer
+                    example: 1
             ai_build:
               type: object
               properties:
@@ -221,4 +272,4 @@ components:
                   example: ["Phase Boots", "Aghanim's Scepter", "Blink Dagger", "Black King Bar"]
                 tactics:
                   type: string
-                  example: "Фокусуйтеся на контролі ворожого керрі під час файтів..."
+                  example: "Тримайте позицію в тумані війни для хука..."

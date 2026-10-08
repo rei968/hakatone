@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS heroes (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     primary_attr TEXT,
+    attack_type TEXT,       -- "Melee" / "Ranged" (OpenDota heroStats.attack_type)
     win_rate REAL,
     pick_rate REAL,
     tier TEXT,

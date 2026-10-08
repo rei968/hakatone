@@ -79,6 +79,18 @@
       }
     },
     {
+      "name": "Meta - Мета для рангу Divine",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/meta/dota?rank=divine",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "meta", "dota"],
+          "query": [{ "key": "rank", "value": "divine" }]
+        }
+      }
+    },
+    {
       "name": "Hero - Деталі героя і AI-білд (Pudge - id: 14)",
       "request": {
         "method": "GET",
@@ -86,6 +98,18 @@
           "raw": "{{baseUrl}}/api/dota/heroes/14",
           "host": ["{{baseUrl}}"],
           "path": ["api", "dota", "heroes", "14"]
+        }
+      }
+    },
+    {
+      "name": "Hero - Pudge для рангу Divine",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/dota/heroes/14?rank=divine",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "dota", "heroes", "14"],
+          "query": [{ "key": "rank", "value": "divine" }]
         }
       }
     },

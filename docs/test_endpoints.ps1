@@ -34,6 +34,15 @@ try {
     Write-Host " [FAIL] Помилка отримання мети: $_" -ForegroundColor Red
 }
 
+# 3b. GET /api/meta/dota?rank=divine
+Write-Host "`n3b. GET /api/meta/dota?rank=divine" -ForegroundColor Yellow
+try {
+    $metaDivine = Invoke-RestMethod -Uri "$BaseUrl/api/meta/dota?rank=divine" -Method Get
+    Write-Host " [OK] Ранг:" $metaDivine.rank "| Матчів:" $metaDivine.total_matches "| Патч:" $metaDivine.patch -ForegroundColor Green
+} catch {
+    Write-Host " [FAIL] Помилка мети для рангу: $_" -ForegroundColor Red
+}
+
 # 4. GET /api/dota/heroes/14
 Write-Host "`n4. GET /api/dota/heroes/14" -ForegroundColor Yellow
 try {
@@ -41,6 +50,15 @@ try {
     Write-Host " [OK] Герой:" $hero.name "| Білд від AI:" ($hero.ai_build.tactics) -ForegroundColor Green
 } catch {
     Write-Host " [FAIL] Помилка героя: $_" -ForegroundColor Red
+}
+
+# 4b. GET /api/dota/heroes/14?rank=divine
+Write-Host "`n4b. GET /api/dota/heroes/14?rank=divine" -ForegroundColor Yellow
+try {
+    $heroDivine = Invoke-RestMethod -Uri "$BaseUrl/api/dota/heroes/14?rank=divine" -Method Get
+    Write-Host " [OK] Вінрейт у Divine:" $heroDivine.win_rate "| Рівнів у skill_order:" $heroDivine.ai_build.skill_order.Count "| Талантів:" $heroDivine.ai_build.talents.Count -ForegroundColor Green
+} catch {
+    Write-Host " [FAIL] Помилка героя для рангу: $_" -ForegroundColor Red
 }
 
 # 5. POST /admin/sync

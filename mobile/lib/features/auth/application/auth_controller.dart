@@ -1,44 +1,49 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/app_storage.dart';
-import '../data/api_auth_repository.dart';
-import '../data/auth_repository.dart';
+import '../../profile/application/profile_providers.dart';
 import '../data/session_store.dart';
-import '../domain/auth_session.dart';
-
-final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => AppConfig.mockAuth ? MockAuthRepository() : ApiAuthRepository(ref.watch(dioProvider)),
-);
+import '../data/steam_openid.dart';
+import '../domain/steam_session.dart';
 
 final sessionStoreProvider = Provider<SessionStore>(
   (ref) => KeyValueSessionStore(ref.watch(appStorageProvider).session),
 );
 
+final steamOpenIdProvider = Provider<SteamOpenId>((ref) => SteamOpenId(ref.watch(externalDioProvider)));
+
 enum AuthStatus {
   /// Ще читаємо збережену сесію — показується splash.
   unknown,
-  signedOut,
+
+  /// Гість: мета й герої доступні, профіль пропонує увійти через Steam.
+  guest,
   signedIn,
 }
 
 @immutable
 class AuthState {
-  const AuthState._(this.status, this.session);
+  const AuthState._(this.status, this.session, {this.welcomed = true});
 
   const AuthState.unknown() : this._(AuthStatus.unknown, null);
-  const AuthState.signedOut() : this._(AuthStatus.signedOut, null);
-  const AuthState.signedIn(AuthSession session) : this._(AuthStatus.signedIn, session);
+  const AuthState.guest({bool welcomed = true}) : this._(AuthStatus.guest, null, welcomed: welcomed);
+  const AuthState.signedIn(SteamSession session) : this._(AuthStatus.signedIn, session);
 
   final AuthStatus status;
-  final AuthSession? session;
+  final SteamSession? session;
+
+  /// Екран «Увійти через Steam / Продовжити без входу» вже бачили (показується раз).
+  final bool welcomed;
 }
 
-/// Сесія гравця. Стан форми (надсилання, помилки) тримає сам екран входу,
-/// а тут лише результат: увійшов чи ні.
+/// Сесія гравця. Вхід необов’язковий: без нього не працює лише профіль.
 class AuthController extends Notifier<AuthState> {
+  static const _welcomedKey = 'welcomed';
+
   @override
   AuthState build() {
     _restore();
@@ -47,37 +52,40 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void> _restore() async {
     final session = await ref.read(sessionStoreProvider).read();
-    state = session == null ? const AuthState.signedOut() : AuthState.signedIn(session);
+    final welcomed = ref.read(appStorageProvider).session.read(_welcomedKey) != null;
+    state = session == null ? AuthState.guest(welcomed: welcomed) : AuthState.signedIn(session);
   }
 
-  /// Кидає [AuthException].
-  Future<void> signIn({required String email, required String password}) async {
-    final session = await ref
-        .read(authRepositoryProvider)
-        .login(email: normalizeEmail(email), password: password);
-    await _start(session);
+  /// Steam ID уже підтверджено (Steam OpenID) або введено вручну. Ім’я й аватар
+  /// підтягуються з OpenDota; без мережі вхід однаково відбувається.
+  Future<void> signIn(String steamId64) async {
+    var session = SteamSession(steamId64: steamId64);
+    try {
+      final profile = await ref
+          .read(profileRepositoryProvider)
+          .fetchProfile(session.accountId)
+          .timeout(const Duration(seconds: 8));
+      session = session.copyWith(personaName: profile.name, avatarUrl: profile.avatarUrl);
+    } catch (_) {
+      // Профіль підтягнеться пізніше на екрані профілю.
+    }
+    await ref.read(sessionStoreProvider).write(session);
+    await _markWelcomed();
+    state = AuthState.signedIn(session);
   }
 
-  /// Кидає [AuthException].
-  Future<void> signUp({required String email, required String password}) async {
-    final session = await ref
-        .read(authRepositoryProvider)
-        .register(email: normalizeEmail(email), password: password);
-    await _start(session);
+  /// «Продовжити без входу» на першому екрані.
+  Future<void> continueAsGuest() async {
+    await _markWelcomed();
+    state = const AuthState.guest();
   }
 
   Future<void> signOut() async {
     await ref.read(sessionStoreProvider).clear();
-    state = const AuthState.signedOut();
+    state = const AuthState.guest();
   }
 
-  Future<void> _start(AuthSession session) async {
-    await ref.read(sessionStoreProvider).write(session);
-    state = AuthState.signedIn(session);
-  }
-
-  /// Email без пробілів по краях і в нижньому регістрі; пароль не чіпаємо.
-  static String normalizeEmail(String email) => email.trim().toLowerCase();
+  Future<void> _markWelcomed() => ref.read(appStorageProvider).session.write(_welcomedKey, '1');
 }
 
 final authControllerProvider = NotifierProvider<AuthController, AuthState>(AuthController.new);

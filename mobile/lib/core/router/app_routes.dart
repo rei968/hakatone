@@ -1,12 +1,14 @@
-/// Шляхи застосунку (docs/design/02-auth.html, «Потік екранів»).
-/// Рядки маршрутів пишуться лише тут.
+/// Шляхи застосунку. Рядки маршрутів пишуться лише тут.
 abstract final class AppRoutes {
   static const splash = '/splash';
-  static const login = '/login';
-  static const register = '/register';
 
-  /// Головний екран — мета героїв.
-  static const meta = '/';
+  /// «Увійти через Steam»: першим екраном для нового гравця і з профілю.
+  static const login = '/login';
+
+  // Вкладки нижнього меню.
+  static const home = '/';
+  static const meta = '/meta';
+  static const profile = '/profile';
 
   static const heroPattern = '/hero/:heroId';
   static String hero(int heroId) => '/hero/$heroId';

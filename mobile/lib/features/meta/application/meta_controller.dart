@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../core/dota/rank.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/app_storage.dart';
 import '../data/api_meta_repository.dart';
@@ -38,7 +39,10 @@ class MetaFeed {
   final Object? error;
 
   /// Мережі немає: банер «Немає інтернету», сіра крапка.
-  bool get offline => error is ApiException && (error! as ApiException).failure == ApiFailure.network;
+  bool get offline => isOfflineError(error);
+
+  /// Свіжі дані з мережі, отримані щойно: індикатор кольору дасту.
+  bool justSynced(DateTime now) => !fromCache && error == null && now.difference(savedAt) < const Duration(minutes: 1);
 
   MetaFeed _with({bool? refreshing, Object? error, bool clearError = false}) => MetaFeed(
         report: report,
@@ -53,11 +57,18 @@ class MetaFeed {
 /// кеш з Hive показуємо одразу, мережевий запит іде у фоні. Скелетон бачить
 /// лише той, у кого кешу ще немає; помилку — той, у кого немає ні кешу, ні мережі.
 class MetaController extends AsyncNotifier<MetaFeed> {
+  /// Ключ кешу мети за всі ранги; для рангу — `meta:divine` тощо.
   static const cacheKey = 'meta';
+
+  static String cacheKeyFor(Rank rank) => rank == Rank.all ? cacheKey : '$cacheKey:${rank.apiValue}';
+
+  late Rank _rank;
 
   @override
   Future<MetaFeed> build() async {
-    final cached = ref.read(jsonCacheProvider).read(cacheKey);
+    // Інший ранг — інша мета: build запускається заново.
+    _rank = ref.watch(rankProvider);
+    final cached = ref.read(jsonCacheProvider).read(cacheKeyFor(_rank));
     if (cached != null) {
       try {
         final feed = MetaFeed(
@@ -76,9 +87,10 @@ class MetaController extends AsyncNotifier<MetaFeed> {
   }
 
   Future<MetaFeed> _fetch() async {
-    final report = await ref.read(metaRepositoryProvider).fetchMeta();
+    final rank = _rank;
+    final report = await ref.read(metaRepositoryProvider).fetchMeta(rank: rank);
     final now = DateTime.now();
-    await ref.read(jsonCacheProvider).write(cacheKey, report.toJson(), now);
+    await ref.read(jsonCacheProvider).write(cacheKeyFor(rank), report.toJson(), now);
     return MetaFeed(report: report, savedAt: now);
   }
 
@@ -90,11 +102,14 @@ class MetaController extends AsyncNotifier<MetaFeed> {
     }
     if (!ref.mounted) return;
     final previous = state.value;
+    final rank = _rank;
+    // Поки йшов запит, гравець міг обрати інший ранг: тоді відповідь уже не потрібна.
+    bool current() => ref.mounted && rank == _rank;
     try {
       final fresh = await _fetch();
-      if (ref.mounted) state = AsyncData(fresh);
+      if (current()) state = AsyncData(fresh);
     } catch (error) {
-      if (ref.mounted && previous != null) {
+      if (current() && previous != null) {
         state = AsyncData(previous._with(refreshing: false, error: error));
       }
     }

@@ -3,61 +3,41 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/auth/application/auth_controller.dart';
 import '../config/app_config.dart';
 
-/// Позначка для запитів, які вимагають токена (у `openapi.yaml` —
-/// `security: BearerAuth`, зараз це лише `/admin/sync`).
-/// Мета й герої публічні, тож без зайвого заголовка й CORS-preflight.
-Options authorized([Options? options]) =>
-    (options ?? Options()).copyWith(extra: {...?options?.extra, _authKey: true});
-
-const _authKey = 'auth';
-
+/// Бекенд команди (`docs/openapi.yaml`). Мета й герої публічні, без токена.
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
       baseUrl: AppConfig.apiBaseUrl,
       // Бекенд на Render засинає після ~15 хв і прокидається до хвилини,
-      // а перший AI-білд героя Gemini складає до ~10 с.
+      // а перший AI-білд героя Gemini складає до ~25 с.
       connectTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 60),
       headers: {'Accept': 'application/json'},
     ),
   );
-  dio.interceptors.add(_AuthInterceptor(ref));
   ref.onDispose(dio.close);
   return dio;
 });
 
-/// Додає `Authorization: Bearer …` до захищених запитів, а на їхній 401
-/// закриває сесію — роутер сам поверне на екран входу.
-class _AuthInterceptor extends Interceptor {
-  _AuthInterceptor(this._ref);
-
-  final Ref _ref;
-
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (options.extra[_authKey] == true) {
-      final token = _ref.read(authControllerProvider).session?.token;
-      if (token != null) options.headers['Authorization'] = 'Bearer $token';
-    }
-    handler.next(options);
-  }
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 401 && err.requestOptions.extra[_authKey] == true) {
-      _ref.read(authControllerProvider.notifier).signOut();
-    }
-    handler.next(err);
-  }
-}
+/// Для сторонніх публічних API з повними адресами: OpenDota (профіль гравця)
+/// і Steam (перевірка входу).
+final externalDioProvider = Provider<Dio>((ref) {
+  final dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 20),
+      receiveTimeout: const Duration(seconds: 40),
+      headers: {'Accept': 'application/json'},
+    ),
+  );
+  ref.onDispose(dio.close);
+  return dio;
+});
 
 enum ApiFailure {
-  /// Немає мережі, таймаут 10 с, сервер недосяжний.
+  /// Немає мережі, таймаут, сервер недосяжний.
   network,
 
   /// 5xx.
@@ -82,7 +62,6 @@ class ApiException implements Exception {
       400 => ApiFailure.badRequest,
       401 => ApiFailure.unauthorized,
       404 => ApiFailure.notFound,
-      >= 500 => ApiFailure.server,
       _ => ApiFailure.server,
     };
     return ApiException(failure, statusCode: status, code: code);
@@ -91,6 +70,8 @@ class ApiException implements Exception {
   final ApiFailure failure;
   final int? statusCode;
   final String? code;
+
+  bool get isOffline => failure == ApiFailure.network;
 
   @override
   String toString() => 'ApiException($failure, $statusCode, $code)';
@@ -103,6 +84,20 @@ Map<String, dynamic> jsonObject(Object? data) {
   if (decoded is Map<String, dynamic>) return decoded;
   throw const ApiException(ApiFailure.server, code: 'unexpected_body');
 }
+
+/// Те саме для відповіді-масиву.
+List<Map<String, dynamic>> jsonList(Object? data) {
+  final decoded = data is String ? jsonDecode(data) : data;
+  if (decoded is List) return decoded.whereType<Map<String, dynamic>>().toList();
+  throw const ApiException(ApiFailure.server, code: 'unexpected_body');
+}
+
+/// Помилка не з бекенду, а будь-яка: мережа dio теж вважається офлайном.
+bool isOfflineError(Object? error) => switch (error) {
+      ApiException(:final isOffline) => isOffline,
+      DioException(type: != DioExceptionType.badResponse) => true,
+      _ => false,
+    };
 
 String? _errorCode(Object? data) {
   try {

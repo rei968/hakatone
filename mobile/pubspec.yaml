@@ -19,6 +19,7 @@ dependencies:
   intl: any
   ota_update: ^7.1.0
   package_info_plus: ^10.2.2
+  webview_flutter: ^4.13.0
 
 dev_dependencies:
   flutter_test:
@@ -30,6 +31,8 @@ flutter:
   assets:
     # Копії backend/database/seeds (Flutter не бачить файлів поза mobile/).
     - assets/mocks/
+    # Довідники «назва → іконка» з OpenDota: tool/generate_dota_assets.dart.
+    - assets/data/
   # Змінні шрифти з github.com/google/fonts (OFL, ліцензії поруч у assets/fonts).
   # Вбудовані, щоб застосунок виглядав однаково й без інтернету.
   fonts:

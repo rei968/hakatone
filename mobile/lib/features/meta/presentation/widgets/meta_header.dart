@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/format/formatters.dart';
 import '../../../../core/theme/theme_context.dart';
-import '../../../auth/application/auth_controller.dart';
+import '../../application/meta_controller.dart';
 
 enum UpdateStatus { fresh, justSynced, refreshing, offline, failed }
 
@@ -127,66 +129,55 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
   }
 }
 
-/// Аватар профілю: перша літера email. Відкриває шторку з виходом.
-class ProfileButton extends ConsumerWidget {
-  const ProfileButton({super.key});
+/// Стан індикатора з мети. [now] — щоб «щойно оновлено» гасло саме.
+UpdateStatus metaUpdateStatus(AsyncValue<MetaFeed> meta, DateTime now) {
+  final feed = meta.value;
+  return switch (feed) {
+    _ when meta.isLoading || (feed?.refreshing ?? false) => UpdateStatus.refreshing,
+    null => UpdateStatus.failed,
+    MetaFeed(offline: true) => UpdateStatus.offline,
+    MetaFeed(error: != null) => UpdateStatus.failed,
+    _ when feed.justSynced(now) => UpdateStatus.justSynced,
+    _ => UpdateStatus.fresh,
+  };
+}
+
+/// [UpdatedIndicator] для поточної мети, що сам перераховується кожні 30 с.
+class LiveUpdatedIndicator extends ConsumerStatefulWidget {
+  const LiveUpdatedIndicator({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final email = ref.watch(authControllerProvider).session?.user.email ?? '';
-    final colors = context.colors;
-    return IconButton(
-      tooltip: 'Профіль: $email',
-      onPressed: () => _openSheet(context, ref, email),
-      icon: Container(
-        width: 34,
-        height: 34,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: colors.surface2,
-          shape: BoxShape.circle,
-          border: Border.all(color: colors.border),
-        ),
-        child: Text(
-          email.isEmpty ? '?' : email.characters.first.toUpperCase(),
-          style: context.text.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface),
-        ),
-      ),
-    );
+  ConsumerState<LiveUpdatedIndicator> createState() => _LiveUpdatedIndicatorState();
+}
+
+class _LiveUpdatedIndicatorState extends ConsumerState<LiveUpdatedIndicator> {
+  late final Timer _clock;
+
+  @override
+  void initState() {
+    super.initState();
+    _clock = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
-  void _openSheet(BuildContext context, WidgetRef ref, String email) {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) {
-        final m = sheetContext.metrics;
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(m.space4, 0, m.space4, m.space4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Ви увійшли як',
-                  style: sheetContext.text.bodySmall?.copyWith(color: sheetContext.colors.textMuted),
-                ),
-                const SizedBox(height: 2),
-                Text(email, style: sheetContext.text.titleMedium),
-                SizedBox(height: m.space6),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(sheetContext).pop();
-                    ref.read(authControllerProvider.notifier).signOut();
-                  },
-                  icon: const Icon(Icons.logout_rounded, size: 18),
-                  label: const Text('Вийти'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+  @override
+  void dispose() {
+    _clock.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = ref.watch(metaControllerProvider);
+    final feed = meta.value;
+    final now = DateTime.now();
+    return UpdatedIndicator(
+      status: metaUpdateStatus(meta, now),
+      patch: feed?.report.patch,
+      updatedAt: feed?.report.updatedAt,
+      savedAt: feed?.savedAt,
+      now: now,
     );
   }
 }

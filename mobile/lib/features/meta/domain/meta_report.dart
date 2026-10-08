@@ -16,6 +16,8 @@ class MetaHero {
     required this.avatarUrl,
     required this.tier,
     required this.aiSummary,
+    this.matches,
+    this.winRateDelta,
   });
 
   factory MetaHero.fromJson(Map<String, dynamic> json) => MetaHero(
@@ -28,6 +30,8 @@ class MetaHero {
         avatarUrl: json['avatar_url'] as String?,
         tier: Tier.fromApi(json['tier'] as String?),
         aiSummary: _nonEmpty(json['ai_summary'] as String?),
+        matches: (json['matches'] as num?)?.toInt(),
+        winRateDelta: (json['win_rate_delta'] as num?)?.toDouble(),
       );
 
   final int id;
@@ -44,6 +48,12 @@ class MetaHero {
   /// Коротка підказка від AI (Gemini). Немає — рядок рендериться без неї.
   final String? aiSummary;
 
+  /// Скільки разів героя взяли в обраному ранзі.
+  final int? matches;
+
+  /// Зміна вінрейту за тиждень, процентні пункти (завжди за всі ранги).
+  final double? winRateDelta;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
@@ -54,17 +64,21 @@ class MetaHero {
         'avatar_url': avatarUrl,
         'tier': tier == Tier.none ? null : tier.letter,
         'ai_summary': aiSummary,
+        'matches': matches,
+        'win_rate_delta': winRateDelta,
       };
 }
 
 /// Відповідь `GET /api/meta/dota`.
 @immutable
 class MetaReport {
-  const MetaReport({required this.updatedAt, required this.patch, required this.heroes});
+  const MetaReport({required this.updatedAt, required this.patch, required this.heroes, this.rank, this.totalMatches});
 
   factory MetaReport.fromJson(Map<String, dynamic> json) => MetaReport(
         updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? ''),
         patch: json['patch'] as String? ?? '',
+        rank: json['rank'] as String?,
+        totalMatches: (json['total_matches'] as num?)?.toInt(),
         heroes: [
           for (final hero in json['meta_heroes'] as List? ?? const [])
             MetaHero.fromJson(hero as Map<String, dynamic>),
@@ -77,9 +91,17 @@ class MetaReport {
   final String patch;
   final List<MetaHero> heroes;
 
+  /// Для якого рангу пораховано (`all`, `divine`…). Старий бекенд поля не має.
+  final String? rank;
+
+  /// Матчів у вибірці рангу.
+  final int? totalMatches;
+
   Map<String, dynamic> toJson() => {
         'updated_at': updatedAt?.toUtc().toIso8601String(),
         'patch': patch,
+        'rank': rank,
+        'total_matches': totalMatches,
         'meta_heroes': [for (final hero in heroes) hero.toJson()],
       };
 

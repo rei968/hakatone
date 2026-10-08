@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../core/dota/rank.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/app_storage.dart';
 import '../data/api_hero_repository.dart';
@@ -29,18 +30,20 @@ class HeroCard {
 }
 
 /// Спершу мережа, без неї — збережена картка (офлайн-демо в режимі польоту).
-/// 404 не кешується: героя справді немає.
+/// 404 не кешується: героя справді немає. Ранг спільний з метою.
 final heroCardProvider = FutureProvider.autoDispose.family<HeroCard, int>((ref, id) async {
+  final rank = ref.watch(rankProvider);
   final cache = ref.read(jsonCacheProvider);
-  final key = 'hero:$id';
+  final key = rank == Rank.all ? 'hero:$id' : 'hero:$id:${rank.apiValue}';
   try {
-    final details = await ref.read(heroRepositoryProvider).fetchHero(id);
+    final details = await ref.read(heroRepositoryProvider).fetchHero(id, rank: rank);
     await cache.write(key, details.toJson(), DateTime.now());
     return HeroCard(details: details);
   } on HeroNotFoundException {
     rethrow;
   } catch (error) {
-    final cached = cache.read(key);
+    // Без мережі згодиться й картка за всі ранги: білд від рангу не залежить.
+    final cached = cache.read(key) ?? cache.read('hero:$id');
     if (cached == null) rethrow;
     return HeroCard(details: HeroDetails.fromJson(cached.data), savedAt: cached.savedAt, staleError: error);
   }

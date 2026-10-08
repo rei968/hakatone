@@ -35,4 +35,43 @@ abstract final class Fmt {
     final mm = local.minute.toString().padLeft(2, '0');
     return '${local.day} ${_months[local.month - 1]}, $hh:$mm';
   }
+
+  static const _monthsGen = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
+
+  /// Тиждень до [end]: «2–8 жовтня» або «28 вересня – 4 жовтня».
+  static String weekRange(DateTime end) {
+    final to = end.toLocal();
+    final from = to.subtract(const Duration(days: 6));
+    if (from.month == to.month) return '${from.day}–${to.day} ${_monthsGen[to.month - 1]}';
+    return '${from.day} ${_monthsGen[from.month - 1]} – ${to.day} ${_monthsGen[to.month - 1]}';
+  }
+
+  /// 3 978 299 → «4,0 млн матчів», 12 400 → «12,4 тис. матчів», 7 → «7 матчів».
+  static String matches(int n) {
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1).replaceAll('.', ',')} млн матчів';
+    if (n >= 10000) return '${(n / 1000).toStringAsFixed(1).replaceAll('.', ',')} тис. матчів';
+    return '$n ${plural(n, one: 'матч', few: 'матчі', many: 'матчів')}';
+  }
+
+  static String games(int n) => '$n ${plural(n, one: 'гра', few: 'гри', many: 'ігор')}';
+
+  /// +1,8 · −0,9 · 0,0 (процентні пункти).
+  static String delta(double value) {
+    final text = value.abs().toStringAsFixed(1).replaceAll('.', ',');
+    return value > 0.05 ? '+$text' : value < -0.05 ? '−$text' : text;
+  }
+
+  /// 575 с → «9:35».
+  static String clock(Duration d) => '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+
+  /// «2 год тому», «вчора», «5 дн тому», «24 вер».
+  static String ago(DateTime time, DateTime now) {
+    final diff = now.difference(time.toLocal());
+    if (diff.inMinutes < 60) return '${diff.inMinutes.clamp(1, 59)} хв тому';
+    if (diff.inHours < 24) return '${diff.inHours} год тому';
+    if (diff.inDays == 1) return 'вчора';
+    if (diff.inDays < 7) return '${diff.inDays} дн тому';
+    final local = time.toLocal();
+    return '${local.day} ${_months[local.month - 1]}';
+  }
 }

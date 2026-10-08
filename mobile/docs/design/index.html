@@ -132,7 +132,8 @@ code{font:500 .86em/1.4 var(--f-mono);background:var(--code);padding:.1em .35em;
   // Опублікована версія читає знімок TODO.md, що лежить поруч, а макети відкриває їхніми посиланнями.
   var PUBLISHED={
     '01-main-menu.html':'https://claude.ai/artifact/XEMpV6JKeRBkBjheh1i6uB',
-    '02-auth.html':'https://claude.ai/artifact/M7v2SW6mYw2BUQ16YSps1Q'
+    '02-auth.html':'https://claude.ai/artifact/M7v2SW6mYw2BUQ16YSps1Q',
+    'docs/BACKEND_V2_PROMPT.md':'https://claude.ai/artifact/2KZJ4CbZTst64T5cAue5gt'
   };
   var state={sections:[],sel:null,open:{},raw:'',mode:null};
   var listEl=document.getElementById('list'), mainEl=document.getElementById('main');
@@ -145,7 +146,7 @@ code{font:500 .86em/1.4 var(--f-mono);background:var(--code);padding:.1em .35em;
     h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
     h=h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,function(_,t,u){
       var m=/^docs\/design\/(.+\.html)$/.exec(u);
-      if(!m) return t;
+      if(!m) return (state.mode==='published'&&PUBLISHED[u])?'<a href="'+PUBLISHED[u]+'" target="_blank" rel="noopener">'+t+'</a>':t;
       if(state.mode==='published'){ var href=PUBLISHED[m[1]]; return href?'<a href="'+href+'" target="_blank" rel="noopener">'+t+'</a>':t; }
       return '<a href="'+m[1]+'" data-doc="'+m[1]+'">'+t+'</a>';
     });

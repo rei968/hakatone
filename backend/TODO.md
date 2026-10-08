@@ -21,7 +21,7 @@
 - [x] Клієнт `GET /heroStats`: 127 героїв
 - [x] Win rate, pick rate, тір (S/A/B/C) рахуються кодом, стати 1-го рівня
 - [x] Upsert не стирає `bio`, `ai_summary`, abilities і AI-білди
-- [~] Коміт `6a8d835` у `feature/opendota-sync`, ще не запушено
+- [~] Коміти в `feature/opendota-sync`, ще не запушено
 
 ## 4. Воркер: Timer.periodic + запит до OpenDota
 - [x] Sync при старті у фоні, далі кожні `SYNC_INTERVAL_HOURS` (6 год)
@@ -38,14 +38,17 @@
 - [x] Білд генерується при першому запиті героя і кешується в `ai_builds`
 - [x] Демо-герої 14, 8, 74 отримують свіжий білд під час sync
 - [x] Без ключа або при помилці AI героя віддаємо без білда, а не 500
-- [ ] Закомітити і відкрити PR
+- [x] Закомічено в `feature/opendota-sync`
+- [ ] Push і PR у `develop`
 - [ ] Попередити ЖЕ: в `openapi.yaml` і презентації досі згадується Claude API
 
 ## 7. Деплой на Render/Railway
-- [ ] Dockerfile: скопіювати `database/` в образ і задати `WORKDIR`
-- [ ] Змінні середовища на сервісі: `GEMINI_API_KEY`
+- [x] Dockerfile: `database/` у образі, `WORKDIR /app`; бандл `dart build cli` перевірено локально
+- [ ] Push гілки, щоб Render міг її зібрати
+- [ ] Web Service на Render: Root Directory `backend`, runtime Docker, env `GEMINI_API_KEY`
 - [ ] Публічний URL бекенду для TY
 - SQLite на Render живе до рестарту, для демо це прийнятно
+- Безкоштовний інстанс засинає без запитів, перед демо його треба «розбудити»
 
 ## 8. Реалізація авторизації
 - [ ] `/api/auth/*`, в останню чергу
@@ -56,5 +59,5 @@
 
 ## Питання
 1. Видаляємо `lib/db.dart`, `bin/backend.dart` і `bin/pubspec.lock` з коміту YY (b397b59)? Сервер їх не використовує.
-2. AI-аналіз комітимо в `feature/opendota-sync` разом з розділами 3–5 і відкриваємо один PR?
+2. Пушимо `feature/opendota-sync` і відкриваємо один PR (OpenDota + AI + Dockerfile)?
 3. Пороги тірів S ≥ 53%, A ≥ 50%, B ≥ 48% влаштовують ЖЕ і TY?

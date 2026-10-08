@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,14 +23,45 @@ class MetaScreen extends ConsumerStatefulWidget {
 class _MetaScreenState extends ConsumerState<MetaScreen> {
   bool _scrolled = false;
 
-  /// Після вдалого pull-to-refresh: індикатор «щойно оновлено» і спалах рядків.
+  /// Після вдалого оновлення: індикатор кольору дасту і спалах рядків — на хвилину.
   bool _justSynced = false;
+  Timer? _syncedTimer;
+
+  /// «Оновлено X хв тому» перераховується сам, без дій гравця.
+  late final Timer _clock;
+
+  /// Повернулися в застосунок (наприклад, після `/admin/sync` на демо) — тягнемо свіжу мету.
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    _clock = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+    _lifecycle = AppLifecycleListener(onResume: _refresh);
+  }
+
+  @override
+  void dispose() {
+    _clock.cancel();
+    _syncedTimer?.cancel();
+    _lifecycle.dispose();
+    super.dispose();
+  }
 
   Future<void> _refresh() async {
     await ref.read(metaControllerProvider.notifier).refresh();
     if (!mounted) return;
     final meta = ref.read(metaControllerProvider);
-    setState(() => _justSynced = !meta.hasError && meta.value?.error == null);
+    final synced = !meta.hasError && meta.value?.error == null;
+    setState(() => _justSynced = synced);
+    _syncedTimer?.cancel();
+    if (synced) {
+      _syncedTimer = Timer(const Duration(minutes: 1), () {
+        if (mounted) setState(() => _justSynced = false);
+      });
+    }
   }
 
   bool _onScroll(ScrollNotification notification) {

@@ -1,0 +1,107 @@
+{
+  "info": {
+    "name": "Kakatone Dota Guide API",
+    "description": "Тестова колекція для QA (ЖЕ) для перевірки всіх ендпоінтів сервера",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth - Реєстрація",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test_qa@kakatone.com\",\n  \"password\": \"hackathon2026\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Логін",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.token) {",
+              "    pm.collectionVariables.set('authToken', jsonData.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test_qa@kakatone.com\",\n  \"password\": \"hackathon2026\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "Meta - Актуальна мета Dota 2",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/meta/dota",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "meta", "dota"]
+        }
+      }
+    },
+    {
+      "name": "Hero - Деталі героя і AI-білд (Pudge - id: 14)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/dota/heroes/14",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "dota", "heroes", "14"]
+        }
+      }
+    },
+    {
+      "name": "Admin - Ручний запуск синку (для демо)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{authToken}}" }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/sync",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "sync"]
+        }
+      }
+    }
+  ]
+}

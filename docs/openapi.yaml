@@ -1,282 +1,224 @@
 openapi: 3.0.3
 info:
-  title: GameGuide Mobile API
-  description: REST API для мобільного довідника з комп'ютерних ігор (Dota 2, CS2 тощо)
+  title: Kakatone Dota/Gaming Guide API
+  description: Dart Shelf REST API з інтеграцією OpenDota та Claude AI для мобільного клієнта (Flutter).
   version: 1.0.0
 servers:
-  - url: http://localhost:5000/api/v1
-    description: Local Development Server
+  - url: http://localhost:8080
+    description: Local Dart (shelf) server
 
 paths:
-  /games:
-    get:
-      summary: Отримати список підтримуваних ігор
-      operationId: getGames
+  /api/auth/register:
+    post:
+      summary: Реєстрація нового користувача
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: "player@example.com"
+                password:
+                  type: string
+                  example: "secret123"
       responses:
-        '200':
-          description: Успішна відповідь зі списком ігор
+        '201':
+          description: Користувача створено
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Game'
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Невалідні дані або email зайнятий
 
-  /games/{gameSlug}:
+  /api/auth/login:
+    post:
+      summary: Авторизація користувача
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: "player@example.com"
+                password:
+                  type: string
+                  example: "secret123"
+      responses:
+        '200':
+          description: Успішний вхід, повертає JWT токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Невірний логін або пароль
+
+  /api/meta/dota:
     get:
-      summary: Отримати детальну інформацію про гру та її категорії
-      operationId: getGameBySlug
+      summary: Отримати список героїв актуальної мети (OpenDota + AI tier)
+      responses:
+        '200':
+          description: Актуальний мета-звіт
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated_at:
+                    type: string
+                    example: "2026-10-08T09:00:00Z"
+                  patch:
+                    type: string
+                    example: "7.37d"
+                  meta_heroes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MetaHero'
+
+  /api/dota/heroes/{id}:
+    get:
+      summary: Детальна картка героя з AI-білдом від Claude API
       parameters:
-        - name: gameSlug
+        - name: id
           in: path
           required: true
           schema:
-            type: string
-            example: dota2
+            type: integer
+            example: 14
       responses:
         '200':
-          description: Деталі гри
+          description: Дані героя з білдом
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GameDetail'
-        '404':
-          description: Гра не знайдена
-
-  /games/{gameSlug}/heroes:
-    get:
-      summary: Отримати список героїв або агентів гри
-      operationId: getHeroes
-      parameters:
-        - name: gameSlug
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: role
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Фільтрація за роллю (Carry, Support тощо)
-        - name: attribute
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Головний атрибут (Strength, Agility, Intelligence)
-        - name: search
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Пошук за назвою героя
-      responses:
-        '200':
-          description: Список героїв
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/HeroSummary'
-
-  /heroes/{heroId}:
-    get:
-      summary: Детальна картка героя (характеристики, скіли, контрпіки, білди)
-      operationId: getHeroById
-      parameters:
-        - name: heroId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Повна інформація про героя
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HeroDetail'
+                $ref: '#/components/schemas/HeroWithBuild'
         '404':
           description: Героя не знайдено
 
-  /games/{gameSlug}/weapons:
-    get:
-      summary: Отримати список зброї / спорядження (для шутерів на кшталт CS2)
-      operationId: getWeapons
-      parameters:
-        - name: gameSlug
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: category
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Rifle, Pistol, SMG, Heavy, Sniper
+  /admin/sync:
+    post:
+      summary: Ручний запуск синхронізації з OpenDota / Claude (для демо)
+      security:
+        - BearerAuth: []
       responses:
         '200':
-          description: Список зброї
+          description: Синхронізація успішно виконана
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Weapon'
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  synced_at:
+                    type: string
+                    example: "2026-10-08T09:05:00Z"
+                  heroes_updated:
+                    type: integer
+                    example: 124
 
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
-    Game:
+    AuthResponse:
       type: object
       properties:
-        id:
+        token:
           type: string
-          example: "dota2"
-        slug:
-          type: string
-          example: "dota2"
-        title:
-          type: string
-          example: "Dota 2"
-        description:
-          type: string
-          example: "Багатокористувацька онлайн-бойова арена (MOBA) від Valve."
-        iconUrl:
-          type: string
-          example: "https://example.com/icons/dota2.png"
-        bannerUrl:
-          type: string
-          example: "https://example.com/banners/dota2.png"
-        supportedCategories:
-          type: array
-          items:
-            type: string
-          example: ["heroes", "items", "guides"]
-
-    GameDetail:
-      allOf:
-        - $ref: '#/components/schemas/Game'
-        - type: object
+          example: "eyJhbGciOiJIUzI1NiIsIn..."
+        user:
+          type: object
           properties:
-            developer:
+            id:
               type: string
-              example: "Valve"
-            genre:
+              example: "usr_123"
+            email:
               type: string
-              example: "MOBA"
-            latestPatch:
-              type: string
-              example: "7.37d"
+              example: "player@example.com"
 
-    HeroSummary:
+    MetaHero:
       type: object
       properties:
         id:
-          type: string
-          example: "pudge"
+          type: integer
+          example: 14
         name:
           type: string
           example: "Pudge"
-        primaryAttribute:
+        win_rate:
+          type: number
+          example: 53.4
+        pick_rate:
+          type: number
+          example: 26.8
+        primary_attr:
           type: string
-          example: "Strength"
-        attackType:
-          type: string
-          example: "Melee"
+          example: "str"
         roles:
           type: array
           items:
             type: string
           example: ["Disabler", "Initiator", "Durable", "Nuker"]
-        avatarUrl:
+        avatar_url:
           type: string
-          example: "https://example.com/heroes/pudge.png"
+          example: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png"
+        tier:
+          type: string
+          example: "S"
+        ai_summary:
+          type: string
+          example: "Найпопулярніший герой. Сильний ранній тиск через Meat Hook."
 
-    Ability:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "meat_hook"
-        name:
-          type: string
-          example: "Meat Hook"
-        description:
-          type: string
-          example: "Запускає кривавий гак у вказану точку, що притягує першого юніта..."
-        cooldown:
-          type: string
-          example: "18/16/14/12"
-        manaCost:
-          type: string
-          example: "110/120/130/140"
-        iconUrl:
-          type: string
-          example: "https://example.com/abilities/meat_hook.png"
-
-    HeroDetail:
+    HeroWithBuild:
       allOf:
-        - $ref: '#/components/schemas/HeroSummary'
+        - $ref: '#/components/schemas/MetaHero'
         - type: object
           properties:
-            bio:
-              type: string
-              example: "На Полях Вічної Різанини..."
-            stats:
-              type: object
-              properties:
-                baseHp:
-                  type: integer
-                  example: 670
-                baseMana:
-                  type: integer
-                  example: 267
-                armor:
-                  type: number
-                  example: 1.8
-                movementSpeed:
-                  type: integer
-                  example: 280
             abilities:
               type: array
               items:
-                $ref: '#/components/schemas/Ability'
-            counterPicks:
-              type: array
-              items:
-                type: string
-              example: ["lifestealer", "ursa", "necrophos"]
-
-    Weapon:
-      type: object
-      properties:
-        id:
-          type: string
-          example: "ak47"
-        name:
-          type: string
-          example: "AK-47"
-        side:
-          type: string
-          example: "T"
-        category:
-          type: string
-          example: "Rifle"
-        price:
-          type: integer
-          example: 2700
-        killAward:
-          type: integer
-          example: 300
-        damage:
-          type: integer
-          example: 36
-        magazineSize:
-          type: integer
-          example: 30
-        imageUrl:
-          type: string
-          example: "https://example.com/weapons/ak47.png"
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "meat_hook"
+                  name:
+                    type: string
+                    example: "Meat Hook"
+                  description:
+                    type: string
+                    example: "Запускає гак..."
+                  icon_url:
+                    type: string
+                    example: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_meat_hook.png"
+            ai_build:
+              type: object
+              properties:
+                skill_order:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Meat Hook", "Rot", "Meat Hook", "Flesh Heap", "Meat Hook", "Dismember"]
+                core_items:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Phase Boots", "Aghanim's Scepter", "Blink Dagger", "Black King Bar"]
+                tactics:
+                  type: string
+                  example: "Фокусуйтеся на контролі ворожого керрі під час файтів..."

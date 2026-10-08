@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:backend/ai/hero_analyzer.dart';
 import 'package:backend/db/app_database.dart';
 import 'package:backend/opendota/opendota_client.dart';
 
@@ -15,12 +16,16 @@ String tierForWinRate(double winRate) => switch (winRate) {
       _ => 'C',
     };
 
-/// Pulls hero stats from OpenDota into the heroes table.
+/// Pulls hero stats from OpenDota into the heroes table and refreshes AI builds for demo heroes.
 class HeroSync {
-  HeroSync(this._db, this._openDota);
+  HeroSync(this._db, this._openDota, {this._analyzer});
+
+  /// Heroes shown in the demo (Pudge, Juggernaut, Invoker): their AI builds are prepared ahead.
+  static const demoHeroIds = [14, 8, 74];
 
   final AppDatabase _db;
   final OpenDotaClient _openDota;
+  final HeroAnalyzer? _analyzer;
   Future<SyncResult>? _running;
 
   /// Runs one sync. Throws on failure, and the DB is left untouched in that case.
@@ -51,7 +56,21 @@ class HeroSync {
     final heroes = [for (final h in stats) _heroFromStats(h, totalPicks / 10)];
 
     final updated = _db.upsertHeroes(heroes);
+    await _refreshDemoAnalyses();
     return (syncedAt: DateTime.now().toUtc(), heroesUpdated: updated);
+  }
+
+  /// A failed analysis keeps the previous build (seed or earlier AI result) and doesn't fail the sync.
+  Future<void> _refreshDemoAnalyses() async {
+    if (_analyzer == null) return;
+    for (final id in demoHeroIds) {
+      try {
+        await _analyzer.analyze(id);
+        print('sync: AI build refreshed for hero $id');
+      } catch (e) {
+        print('sync: AI build for hero $id failed, keeping the previous one: $e');
+      }
+    }
   }
 }
 

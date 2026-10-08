@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
+import 'package:backend/ai/hero_analyzer.dart';
 import 'package:backend/db/app_database.dart';
 import 'package:backend/db/database_files.dart';
 import 'package:backend/sync/hero_sync.dart';
@@ -23,7 +24,12 @@ Map<String, dynamic>? _seedHero(int id) {
   return heroes.cast<Map<String, dynamic>>().where((h) => h['id'] == id).firstOrNull;
 }
 
-Router buildRouter(AppDatabase db, HeroSync sync) {
+/// How long a hero request waits for a fresh AI analysis. A slower one still finishes
+/// in the background and is cached for the next request.
+const _aiTimeout = Duration(seconds: 25);
+
+/// [analyzer] is null when no AI key is configured: heroes are then served without new builds.
+Router buildRouter(AppDatabase db, HeroSync sync, HeroAnalyzer? analyzer) {
   final router = Router(
     notFoundHandler: (Request req) => _json({'error': 'not_found'}, status: 404),
   );
@@ -46,13 +52,22 @@ Router buildRouter(AppDatabase db, HeroSync sync) {
   });
 
   // <id|[0-9]+> only matches digits, so /heroes/abc falls through to 404.
-  router.get('/api/dota/heroes/<id|[0-9]+>', (Request req, String id) {
+  router.get('/api/dota/heroes/<id|[0-9]+>', (Request req, String id) async {
     final heroId = int.tryParse(id);
     if (heroId == null) return _json({'error': 'hero_not_found'}, status: 404);
 
     Map<String, Object?>? hero;
     try {
       hero = db.heroWithBuild(heroId);
+      // No cached build yet: generate it on this first request and store it in ai_builds.
+      if (hero != null && hero['ai_build'] == null && analyzer != null) {
+        try {
+          await analyzer.analyze(heroId).timeout(_aiTimeout);
+          hero = db.heroWithBuild(heroId);
+        } catch (e) {
+          print('hero $heroId: AI analysis failed, serving without a build: $e');
+        }
+      }
     } catch (e) {
       print('hero $heroId: DB read failed, serving seed: $e');
       hero = _seedHero(heroId);

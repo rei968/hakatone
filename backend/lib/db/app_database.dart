@@ -86,6 +86,30 @@ class AppDatabase {
     return heroes.length;
   }
 
+  /// Hero id -> name, e.g. to label matchups.
+  Map<int, String> heroNames() => {
+        for (final row in _db.select('SELECT id, name FROM heroes')) row['id'] as int: row['name'] as String,
+      };
+
+  /// Stores an AI analysis: the summary goes to heroes, the build to ai_builds (one per hero).
+  void saveAnalysis(
+    int heroId, {
+    required String summary,
+    required List<String> skillOrder,
+    required List<String> coreItems,
+    required String tactics,
+  }) {
+    _transaction(() {
+      _db.execute('UPDATE heroes SET ai_summary = ? WHERE id = ?', [summary, heroId]);
+      _db.execute(
+        'INSERT INTO ai_builds (hero_id, skill_order, core_items, tactics) VALUES (?, ?, ?, ?) '
+        'ON CONFLICT(hero_id) DO UPDATE SET skill_order = excluded.skill_order, '
+        'core_items = excluded.core_items, tactics = excluded.tactics, updated_at = CURRENT_TIMESTAMP',
+        [heroId, jsonEncode(skillOrder), jsonEncode(coreItems), tactics],
+      );
+    });
+  }
+
   Map<String, Object?> _metaHero(Row row) => {
         'id': row['id'],
         'name': row['name'],

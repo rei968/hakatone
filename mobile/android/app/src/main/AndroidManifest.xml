@@ -8,6 +8,7 @@
          застосунків, а APK зберігається у власній теці застосунку. -->
     <uses-permission android:name="android.permission.INSTALL_PACKAGES" tools:node="remove"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
     <application
         android:label="${appName}"
         android:usesCleartextTraffic="${usesCleartextTraffic}"

@@ -1,53 +1,59 @@
--- SQL Схема для GameGuide (PostgreSQL / SQLite сумісна)
-
-CREATE TABLE IF NOT EXISTS games (
-    id VARCHAR(50) PRIMARY KEY,
-    slug VARCHAR(50) UNIQUE NOT NULL,
-    title VARCHAR(100) NOT NULL,
-    description TEXT,
-    developer VARCHAR(100),
-    genre VARCHAR(50),
-    icon_url TEXT,
-    banner_url TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- SQLite Схема для MangoData (чистий SQLite3)
+PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS heroes (
-    id VARCHAR(50) PRIMARY KEY,
-    game_id VARCHAR(50) NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    primary_attribute VARCHAR(50),
-    attack_type VARCHAR(50),
-    bio TEXT,
-    stats JSONB,
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    primary_attr TEXT,
+    attack_type TEXT,       -- "Melee" / "Ranged" (OpenDota heroStats.attack_type)
+    win_rate REAL,
+    pick_rate REAL,
+    tier TEXT,
+    roles TEXT,             -- Зберігається як JSON-масив рядків: '["Disabler","Initiator"]'
     avatar_url TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    bio TEXT,
+    stats TEXT,             -- Зберігається як JSON-об'єкт: '{"base_hp": 700, "base_mana": 267}'
+    ai_summary TEXT,
+    matches INTEGER,        -- pub_pick з OpenDota: скільки разів героя взяли (усі ранги)
+    win_rate_delta REAL,    -- зміна вінрейту за тиждень, п.п. (з pub_*_trend)
+    rank_stats TEXT,        -- JSON: '{"1": {"pick": 11964, "win": 6073}, ..., "7": {...}}' (1 Herald … 7 Divine)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS abilities (
-    id VARCHAR(50) PRIMARY KEY,
-    hero_id VARCHAR(50) NOT NULL REFERENCES heroes(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
+    id TEXT PRIMARY KEY,
+    hero_id INTEGER NOT NULL REFERENCES heroes(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
     description TEXT,
-    cooldown VARCHAR(50),
-    mana_cost VARCHAR(50),
+    cooldown TEXT,
+    mana_cost TEXT,
     icon_url TEXT,
-    slot_order INT DEFAULT 0
+    slot_order INTEGER DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS weapons (
-    id VARCHAR(50) PRIMARY KEY,
-    game_id VARCHAR(50) NOT NULL REFERENCES games(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    side VARCHAR(10),
-    category VARCHAR(50),
-    price INT,
-    kill_award INT,
-    damage INT,
-    magazine_size INT,
-    image_url TEXT
+CREATE TABLE IF NOT EXISTS ai_builds (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    hero_id INTEGER UNIQUE NOT NULL REFERENCES heroes(id) ON DELETE CASCADE,
+    skill_order TEXT,       -- Зберігається як JSON-масив: '["Meat Hook","Rot"]'
+    core_items TEXT,        -- Зберігається як JSON-масив: '["Phase Boots","Blink Dagger"]'
+    tactics TEXT,
+    talents TEXT,           -- JSON-масив: '[{"level": 10, "side": "L", "name": "+10% Lifesteal"}, ...]'
+    item_timings TEXT,      -- JSON-об'єкт: '{"Radiance": 1040}' (секунди, рахує код)
+    situational_items TEXT, -- JSON-масив: '[{"name": "Black King Bar", "reason": "Проти контролю"}]'
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_heroes_game_id ON heroes(game_id);
+CREATE TABLE IF NOT EXISTS app_meta (
+    key TEXT PRIMARY KEY,   -- наприклад "patch"
+    value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,            -- "usr_" + 16 hex, як user.id в AuthResponse
+    email TEXT UNIQUE NOT NULL,     -- у нижньому регістрі
+    password_hash TEXT NOT NULL,    -- pbkdf2_sha256$<iterations>$<salt>$<hash>
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_heroes_tier ON heroes(tier);
 CREATE INDEX IF NOT EXISTS idx_abilities_hero_id ON abilities(hero_id);
-CREATE INDEX IF NOT EXISTS idx_weapons_game_id ON weapons(game_id);

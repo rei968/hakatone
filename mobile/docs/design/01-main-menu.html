@@ -1,0 +1,653 @@
+<title>Специфікація головного меню</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap">
+<style>
+/* Layout: two-pane handoff. Left: sticky live device with state controls. Right: palette + spec document. Stacks below 1080px. */
+:root{
+  --paper:#F4F5F8; --card:#FFFFFF; --ink:#141820; --ink-2:#465063; --ink-3:#687185; --rule:#DDE1E8; --code:#ECEEF3;
+  --mark:#9A5800; --on-mark:#FFFFFF;
+  --mk:#D62F92; --on-mk:#FFFFFF;
+  --chip-bg:#10141B; --chip-ink:#E9ECF2;
+  --f-display:"Unbounded", ui-sans-serif, system-ui, sans-serif;
+  --f-body:"Onest", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0B0D12; --card:#12161D; --ink:#E6E9EF; --ink-2:#A3ABBC; --ink-3:#7E879A; --rule:#242A35; --code:#191E27;
+    --mark:#FFA62B; --on-mark:#1A1206; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0B0D12; --card:#12161D; --ink:#E6E9EF; --ink-2:#A3ABBC; --ink-3:#7E879A; --rule:#242A35; --code:#191E27;
+  --mark:#FFA62B; --on-mark:#1A1206; color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:0 72px}
+@media (min-width:720px){.wrap{padding-inline:32px}}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+
+/* ---------- document head ---------- */
+.doc-head{padding-block:36px 32px;border-bottom:1px solid var(--rule);margin-bottom:32px}
+.brand{display:inline-flex;align-items:center;gap:10px;text-transform:none;padding:6px 14px 6px 6px;border-radius:999px;background:var(--chip-bg);color:var(--chip-ink);font:600 15px/1 var(--f-display);letter-spacing:-.01em}
+.brand .glyph{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#FFA62B24}
+.brand em{font-style:normal;color:#FFA62B}
+.eyebrow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;font:500 12px/16px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+h1{font:600 clamp(30px,5vw,48px)/1.1 var(--f-display);letter-spacing:-.02em;margin:18px 0 14px;text-wrap:balance}
+.lede{max-width:64ch;color:var(--ink-2);font-size:17px;margin:0}
+.facts{display:flex;flex-wrap:wrap;gap:12px 32px;margin:26px 0 0}
+.facts div{display:flex;flex-direction:column;min-width:0}
+.facts dt{font:500 11px/16px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3)}
+.facts dd{margin:2px 0 0;font-weight:500;font-size:15px}
+
+/* ---------- two panes ---------- */
+.layout{display:grid;gap:40px}
+.stage{min-width:0}
+@media (min-width:1080px){
+  .layout{grid-template-columns:440px minmax(0,1fr);gap:56px;align-items:start}
+  .stage{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+}
+.controls{display:grid;gap:10px;margin-bottom:18px}
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.ctl-l{font:500 11px/16px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);min-width:64px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px}
+.seg button{height:32px;padding:0 11px;border-radius:8px;border:1px solid var(--rule);background:var(--card);color:var(--ink-2);font:500 13px/1 var(--f-body);cursor:pointer}
+.seg button:hover{border-color:var(--ink-3)}
+.seg button[aria-pressed="true"]{background:var(--mark);border-color:var(--mark);color:var(--on-mark)}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);cursor:pointer}
+.check input{accent-color:var(--mk);width:16px;height:16px;margin:0}
+.stage-note{font-size:13px;color:var(--ink-3);text-align:center;margin:14px auto 0;max-width:46ch}
+
+/* ---------- device ---------- */
+.phone{--ph-h:780px;width:380px;max-width:100%;height:var(--ph-h);margin-inline:auto;padding:10px;border-radius:40px;background:#07090D;box-shadow:0 0 0 1px #2B3242,0 28px 60px -24px rgba(10,14,22,.55);transition:width .24s cubic-bezier(.2,0,0,1)}
+@media (min-width:1080px){.phone{--ph-h:clamp(620px,calc(100vh - 150px),800px)}}
+
+.app{
+  --a-bg:#10141B; --a-s1:#171C25; --a-s2:#1F2531; --a-s3:#283040; --a-border:#2A3141;
+  --a-text:#E9ECF2; --a-muted:#9AA3B5; --a-subtle:#7C8599; --a-ink:#1A1206;
+  --a-mango:#FFA62B; --a-on-mango:#1A1206; --a-mango-soft:#FFA62B24;
+  --a-tango:#7BC74D; --a-salve:#F2545B; --a-clarity:#4DA3FF; --a-smoke:#A27BFF; --a-smoke-soft:#A27BFF1F; --a-dust:#E9D8A6;
+  --mk:#D62F92;
+  position:relative;height:100%;overflow:hidden;border-radius:30px;display:flex;flex-direction:column;
+  background:var(--a-bg);color:var(--a-text);font:400 15px/20px var(--f-body);color-scheme:dark;container-type:inline-size;
+}
+.app button{font-family:inherit;color:inherit}
+.app :focus-visible{outline:2px solid var(--a-clarity);outline-offset:2px}
+
+.a-status{flex:none;height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font:500 13px/1 var(--f-body);color:var(--a-text)}
+.a-status span{display:inline-flex;gap:6px;align-items:center}
+.a-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;padding-bottom:40px;overscroll-behavior:contain}
+.a-scroll::-webkit-scrollbar{display:none}
+.gesture{position:absolute;left:50%;bottom:8px;width:108px;height:4px;border-radius:2px;background:var(--a-text);opacity:.55;transform:translateX(-50%);z-index:7}
+
+/* 1 header */
+.a-head{position:sticky;top:0;z-index:4;display:flex;align-items:center;gap:12px;height:64px;padding:0 8px 0 16px;background:var(--a-bg);border-bottom:1px solid transparent;transition:border-color .12s linear}
+.a-head.stuck{border-bottom-color:var(--a-border)}
+.logo{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--a-mango-soft)}
+.g-txt{flex:1;display:flex;flex-direction:column;min-width:0}
+.wm{font:600 17px/22px var(--f-display);letter-spacing:-.01em}
+.wm em{font-style:normal;color:var(--a-mango)}
+.upd{display:flex;align-items:center;gap:6px;font:400 12px/16px var(--f-body);color:var(--a-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.upd i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--a-tango)}
+.upd i.off{background:var(--a-subtle)}
+.upd i.busy{background:var(--a-dust);animation:blink 1s ease-in-out infinite}
+.upd.fresh{color:var(--a-dust)}
+.upd.fresh i{background:var(--a-dust);box-shadow:0 0 0 3px #E9D8A633}
+@keyframes blink{50%{opacity:.25}}
+.avatar{flex:none;width:48px;height:48px;display:grid;place-items:center;border:0;background:none;cursor:pointer;border-radius:50%}
+.avatar span{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--a-s2);border:1px solid var(--a-border);font:600 13px/1 var(--f-body)}
+
+/* 2 banner */
+.a-banner{position:relative;margin:4px 16px 0;display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:12px;background:var(--a-s2);font:400 13px/18px var(--f-body)}
+.a-banner svg{flex:none;color:var(--a-clarity);margin-top:1px}
+
+/* 3 title */
+.a-title{position:relative;display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:16px 16px 0}
+.a-title h2{margin:0;font:600 22px/28px var(--f-display);letter-spacing:-.01em}
+.a-title span{font:400 12px/16px var(--f-body);color:var(--a-muted);white-space:nowrap}
+
+/* 4 tier section */
+.tier{position:relative;margin-top:24px}
+.tier-h{position:relative;display:flex;align-items:center;gap:12px;margin:0 16px 10px}
+.tb{flex:none;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font:700 15px/1 var(--f-display);color:var(--a-ink);background:var(--tc)}
+.tier-t{display:flex;flex-direction:column;min-width:0}
+.tier-t b{font:600 17px/22px var(--f-body)}
+.tier-t small{font:400 12px/16px var(--f-body);color:var(--a-muted)}
+
+/* 5 hero row */
+.pl{margin:0 16px;border-radius:16px;background:var(--a-s1);border:1px solid var(--a-border);overflow:hidden}
+.row{position:relative;display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:start;column-gap:12px;row-gap:8px;width:100%;min-height:88px;padding:14px 12px;border:0;background:none;text-align:left;font:inherit;cursor:pointer;transition:background-color .12s}
+.row + .row::before{content:"";position:absolute;top:0;left:72px;right:0;height:1px;background:var(--a-border)}
+.row:active{background:var(--a-s2)}
+.row.flash{animation:flash 1.2s ease-out}
+@keyframes flash{0%{background:#E9D8A61F}100%{background:transparent}}
+.th{flex:none;width:48px;height:48px;border-radius:10px;display:grid;place-items:center;font:600 14px/1 var(--f-display);background:color-mix(in srgb,var(--attr) 24%,var(--a-s2));color:color-mix(in srgb,var(--attr) 62%,#FFFFFF)}
+.row-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.n{font:600 15px/20px var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta-l{display:flex;align-items:center;gap:6px;font:400 12px/16px var(--f-body);color:var(--a-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta-l i{flex:none;width:6px;height:6px;border-radius:50%;background:var(--attr)}
+.ai{grid-column:2/4;display:flex;gap:6px;font:400 13px/18px var(--f-body);color:color-mix(in srgb,var(--a-smoke) 35%,var(--a-text))}
+.ai svg{flex:none;color:var(--a-smoke);margin-top:2px}
+.ai span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.wr{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:56px;padding-top:1px}
+.wr b{font:600 15px/20px var(--f-mono);font-variant-numeric:tabular-nums}
+.wr b.good{color:var(--a-tango)} .wr b.bad{color:var(--a-salve)}
+.wr small{font:400 11px/14px var(--f-mono);color:var(--a-muted);white-space:nowrap}
+@container (max-width:339px){.wr small{display:none}.ai span{-webkit-line-clamp:1}}
+
+/* states */
+.sk{display:block;border-radius:6px;background:linear-gradient(100deg,var(--a-s2) 0%,var(--a-s2) 35%,#E9D8A633 50%,var(--a-s2) 65%,var(--a-s2) 100%);background-size:250% 100%;animation:shimmer 1.4s linear infinite}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:-50% 0}}
+.err{margin:24px 16px 0;padding:24px 16px;border-radius:16px;background:var(--a-s1);border:1px solid var(--a-border);display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.err > svg{color:var(--a-salve);margin-bottom:4px}
+.err b{font:600 16px/22px var(--f-body)}
+.err p{margin:0;font:400 13px/18px var(--f-body);color:var(--a-muted)}
+.btn{margin-top:12px;height:48px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;background:var(--a-mango);color:var(--a-on-mango) !important;font:600 14px/20px var(--f-body);cursor:pointer}
+.btn[disabled]{opacity:.6;cursor:default}
+
+.toast{position:absolute;left:12px;right:12px;bottom:28px;z-index:8;display:flex;align-items:center;gap:8px;min-height:48px;padding:6px 16px;border-radius:12px;background:var(--a-text);color:var(--a-bg);font:500 14px/20px var(--f-body);opacity:0;transform:translateY(16px);pointer-events:none;transition:opacity .16s cubic-bezier(.4,0,1,1),transform .16s cubic-bezier(.4,0,1,1)}
+.toast.show{opacity:1;transform:none;transition-duration:.2s;transition-timing-function:cubic-bezier(.2,0,0,1)}
+
+.mk{display:none;position:absolute;z-index:9;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--mk);color:#FFFFFF;font:600 11px/20px var(--f-mono);text-align:center;box-shadow:0 0 0 2px var(--a-bg);pointer-events:none}
+.app.anat .mk{display:block}
+.app.anat [data-mk]{outline:1px dashed var(--mk);outline-offset:-1px}
+
+@media (prefers-reduced-motion:reduce){
+  .app *,.phone{animation:none !important;transition-duration:.01ms !important}
+  .sk{background:var(--a-s2)}
+}
+
+/* ---------- palette ---------- */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin:16px 0 8px}
+.swatch{display:flex;flex-direction:column;border:1px solid var(--rule);border-radius:14px;overflow:hidden;background:var(--card);min-width:0}
+.sw-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;background:var(--chip-bg);color:var(--chip-ink)}
+.sw-top .chip{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 18%,#10141B)}
+.sw-top .hex{font:500 13px/1 var(--f-mono);color:var(--c)}
+.sw-bar{height:6px;background:var(--c)}
+.sw-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
+.sw-body b{font:600 15px/20px var(--f-body)}
+.sw-body b small{font:500 12px/16px var(--f-mono);color:var(--ink-3);margin-left:6px}
+.sw-role{font-size:14px;line-height:1.45}
+.sw-why{font-size:13px;line-height:1.45;color:var(--ink-2)}
+.sw-c{display:inline-block;width:14px;height:14px;margin-right:8px;border-radius:4px;background:var(--c);vertical-align:-2px;box-shadow:inset 0 0 0 1px rgba(128,128,128,.4)}
+.demo-strip{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin:14px 0 4px;padding:14px 16px;border-radius:12px;background:var(--chip-bg);color:var(--chip-ink)}
+.demo-strip .tb{width:30px;height:30px;font-size:14px}
+.demo-strip .lbl{font:500 11px/16px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:#9AA3B5}
+.demo-strip .wrv{font:600 15px/1 var(--f-mono)}
+
+/* ---------- spec document ---------- */
+.spec{min-width:0;max-width:860px}
+.spec section{padding-block:4px 36px;border-top:1px solid var(--rule)}
+.spec section:first-child{border-top:0}
+.spec h2{display:flex;align-items:baseline;gap:12px;margin:28px 0 12px;font:600 22px/1.25 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.spec h2 .idx{flex:none;font:500 13px/1 var(--f-mono);color:var(--mark)}
+.spec h3{margin:28px 0 8px;font:600 16px/1.4 var(--f-body)}
+.spec p,.spec li{max-width:70ch}
+.spec p{margin:0 0 12px}
+.note{color:var(--ink-2);font-size:15px}
+.spec ul{padding-left:20px;margin:8px 0 12px}
+.spec li{margin:6px 0}
+.dec{list-style:none;padding:0 !important}
+.dec li{padding-left:16px;border-left:2px solid var(--rule);margin:14px 0}
+code{font:500 .82em/1.4 var(--f-mono);background:var(--code);padding:.12em .4em;border-radius:4px;white-space:nowrap}
+.tbl{overflow-x:auto;margin:12px 0 6px;border:1px solid var(--rule);border-radius:10px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:600px;font-size:14px;line-height:1.45}
+th{padding:10px 12px;border-bottom:1px solid var(--rule);text-align:left;white-space:nowrap;font:500 11px/16px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,.num{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.anat-list{list-style:none;padding:0 !important;margin:14px 0;display:grid;gap:12px}
+.anat-list li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;align-items:start;margin:0}
+.anat-list .n2{width:22px;height:22px;margin-top:2px;border-radius:50%;background:var(--mk);color:var(--on-mk);font:600 11px/22px var(--f-mono);text-align:center}
+.linkbtn{border:0;background:none;padding:0;color:var(--ink);font:600 15px/1.4 var(--f-body);text-decoration:underline;text-decoration-color:var(--mark);text-underline-offset:3px;cursor:pointer}
+.show{height:28px;padding:0 10px;border:1px solid var(--rule);border-radius:7px;background:var(--card);color:var(--ink-2);font:500 12px/1 var(--f-body);cursor:pointer;white-space:nowrap}
+.show:hover{border-color:var(--ink-3)}
+pre.code{overflow-x:auto;margin:12px 0;padding:14px 16px;border-radius:10px;background:var(--code);font:400 13px/1.55 var(--f-mono)}
+pre.code code{background:none;padding:0;white-space:pre;font-size:inherit}
+.qs li{margin:10px 0}
+</style>
+
+<div class="wrap">
+  <header class="doc-head">
+    <div class="eyebrow">
+      <span class="brand"><span class="glyph" data-icon="mango"></span><span class="bw">Mango<em>Dota</em></span></span>
+      <span>Handoff · v0.3 · 8 жовтня 2026</span>
+    </div>
+    <h1>Головне меню</h1>
+    <p class="lede">Головний екран MangoDota: мета Dota 2 за тірами, вінрейти й короткі AI-підказки від Gemini. Кольори інтерфейсу взяті з розхідників: манго, танго, фласка, кларетка, смок і даст. Ліворуч інтерактивний макет, праворуч палітра та специфікація для Flutter.</p>
+    <dl class="facts">
+      <div><dt>Платформа</dt><dd>Android (APK), Flutter</dd></div>
+      <div><dt>Базовий макет</dt><dd class="num">360 × 780 dp</dd></div>
+      <div><dt>Тема</dt><dd>Темна</dd></div>
+      <div><dt>Дані</dt><dd><code>GET /api/meta/dota</code>, моки з <code>meta.json</code></dd></div>
+      <div><dt>Джерело вимог</dt><dd><code>mobile/README.md</code>, <code>docs/</code></dd></div>
+    </dl>
+  </header>
+
+  <div class="layout">
+    <aside class="stage" id="stage" aria-label="Інтерактивний макет">
+      <div class="controls" id="controls">
+        <div class="ctl"><span class="ctl-l">Стан</span>
+          <div class="seg" data-ctl="screen">
+            <button type="button" data-v="default" aria-pressed="true">Звичайний</button>
+            <button type="button" data-v="loading" aria-pressed="false">Завантаження</button>
+            <button type="button" data-v="offline" aria-pressed="false">Офлайн</button>
+            <button type="button" data-v="error" aria-pressed="false">Помилка</button>
+            <button type="button" data-v="synced" aria-pressed="false">Щойно оновлено</button>
+          </div>
+        </div>
+        <div class="ctl"><span class="ctl-l">Ширина</span>
+          <div class="seg" data-ctl="width">
+            <button type="button" data-v="320" aria-pressed="false">320</button>
+            <button type="button" data-v="360" aria-pressed="true">360</button>
+            <button type="button" data-v="412" aria-pressed="false">412</button>
+          </div>
+          <label class="check" for="anatToggle"><input type="checkbox" id="anatToggle"> Анатомія</label>
+        </div>
+      </div>
+
+      <div class="phone" id="phone">
+        <div class="app" id="app">
+          <div class="a-status" aria-hidden="true">
+            <span>9:41</span>
+            <span>
+              <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 11.5 0.8 4.2a10.2 10.2 0 0 1 14.4 0z" fill="currentColor"/></svg>
+              <svg width="12" height="12" viewBox="0 0 12 12"><path d="M11.5 0.5v11h-11z" fill="currentColor"/></svg>
+              <svg width="22" height="12" viewBox="0 0 22 12"><rect x=".5" y=".5" width="19" height="11" rx="3" fill="none" stroke="currentColor" opacity=".55"/><rect x="2" y="2" width="13" height="8" rx="1.5" fill="currentColor"/><rect x="20.5" y="4" width="1.5" height="4" rx=".75" fill="currentColor" opacity=".55"/></svg>
+            </span>
+          </div>
+          <div class="a-scroll" id="scroll">
+            <header class="a-head" id="head" data-mk="1">
+              <span class="mk" aria-hidden="true">1</span>
+              <span class="logo" data-icon="mango"></span>
+              <span class="g-txt"><span class="wm">Mango<em>Dota</em></span><span class="upd" id="upd"></span></span>
+              <button type="button" class="avatar" data-act="profile" aria-label="Профіль: player@example.com"><span>P</span></button>
+            </header>
+            <div id="content"></div>
+          </div>
+          <span class="gesture" aria-hidden="true"></span>
+          <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        </div>
+      </div>
+      <p class="stage-note">Pudge, Juggernaut та Invoker узяті з <code>backend/database/seeds/meta.json</code>. Решта героїв вигадані для верстки, щоб показати тіри B і C. Аватари показано заглушками-монограмами.</p>
+    </aside>
+
+    <article class="spec">
+      <section id="palette">
+        <h2><span class="idx">01</span>Палітра розхідників</h2>
+        <p>Акцентні кольори MangoDota взято з розхідників Dota 2. У кожного одна роль, і пояснює її сам предмет у грі. Так палітру легко запам’ятати й важко зламати: якщо кольору немає в таблиці, у застосунку його теж немає.</p>
+        <div class="swatches">
+          <div class="swatch" style="--c:#FFA62B">
+            <div class="sw-top"><span class="chip" data-icon="mango"></span><span class="hex">#FFA62B</span></div><div class="sw-bar"></div>
+            <div class="sw-body"><b>Манго<small>Enchanted Mango</small></b><span class="sw-role">Бренд і головні дії: логотип, кнопки, S-тір, індикатор оновлення.</span><span class="sw-why">Від нього назва застосунку, тож це обличчя бренду. 8,7 : 1 на surface1.</span></div>
+          </div>
+          <div class="swatch" style="--c:#7BC74D">
+            <div class="sw-top"><span class="chip" data-icon="tango"></span><span class="hex">#7BC74D</span></div><div class="sw-bar"></div>
+            <div class="sw-body"><b>Танго<small>Tango</small></b><span class="sw-role">Добре: вінрейт від 52 %, свіжі дані, A-тір.</span><span class="sw-why">Лікує поступово, тож це колір того, що працює. 8,2 : 1.</span></div>
+          </div>
+          <div class="swatch" style="--c:#F2545B">
+            <div class="sw-top"><span class="chip" data-icon="salve"></span><span class="hex">#F2545B</span></div><div class="sw-bar"></div>
+            <div class="sw-body"><b>Фласка<small>Healing Salve</small></b><span class="sw-role">Погано: вінрейт до 48 %, помилки, C-тір.</span><span class="sw-why">Червоний флакон, що злітає від першого удару, — колір проблем. 5,0 : 1.</span></div>
+          </div>
+          <div class="swatch" style="--c:#4DA3FF">
+            <div class="sw-top"><span class="chip" data-icon="clarity"></span><span class="hex">#4DA3FF</span></div><div class="sw-bar"></div>
+            <div class="sw-body"><b>Кларетка<small>Clarity</small></b><span class="sw-role">Інформація: посилання, фокус, банер офлайну, B-тір.</span><span class="sw-why">Синє зілля мани, спокійний колір для довідки. 6,5 : 1.</span></div>
+          </div>
+          <div class="swatch" style="--c:#A27BFF">
+            <div class="sw-top"><span class="chip" data-icon="smoke"></span><span class="hex">#A27BFF</span></div><div class="sw-bar"></div>
+            <div class="sw-body"><b>Смок<small>Smoke of Deceit</small></b><span class="sw-role">Усе, що згенерував AI: <code>ai_summary</code>, AI-білд, тактика.</span><span class="sw-why">Непомітна перевага перед ганком — так працює підказка від Gemini. 5,5 : 1.</span></div>
+          </div>
+          <div class="swatch" style="--c:#E9D8A6">
+            <div class="sw-top"><span class="chip" data-icon="dust"></span><span class="hex">#E9D8A6</span></div><div class="sw-bar"></div>
+            <div class="sw-body"><b>Даст<small>Dust of Appearance</small></b><span class="sw-role">Проявлення: відблиск скелетона й спалах «Щойно оновлено».</span><span class="sw-why">Проявляє невидимих, а тут проявляє контент, що вантажиться. 12 : 1.</span></div>
+          </div>
+        </div>
+        <div class="demo-strip" aria-label="Приклад тірів і вінрейтів">
+          <span class="lbl">Тіри</span>
+          <span class="tb" style="--tc:#FFA62B;color:#1A1206">S</span><span class="tb" style="--tc:#7BC74D;color:#1A1206">A</span><span class="tb" style="--tc:#4DA3FF;color:#1A1206">B</span><span class="tb" style="--tc:#F2545B;color:#1A1206">C</span>
+          <span class="lbl">Вінрейт</span>
+          <span class="wrv" style="color:#7BC74D">53,4%</span><span class="wrv">50,1%</span><span class="wrv" style="color:#F2545B">46,8%</span>
+        </div>
+        <h3>Атрибути героїв</h3>
+        <p>Кольори атрибутів у грі збігаються з розхідниками, тому окремих токенів для них немає. Сила — фласка, спритність — танго, інтелект — кларетка, універсал — смок. Вони фарбують лише монограму-заглушку аватара і крапку атрибута, тексту цими кольорами немає.</p>
+        <h3>Нейтральні</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Токен</th><th>Значення</th><th>Контраст · використання</th></tr></thead>
+          <tbody>
+            <tr><td><code>bg</code></td><td class="num"><span class="sw-c" style="--c:#10141B"></span>#10141B</td><td>Фон екрана і шапки. Синювата «нічна карта», щоб манго на ній світилося.</td></tr>
+            <tr><td><code>surface1</code></td><td class="num"><span class="sw-c" style="--c:#171C25"></span>#171C25</td><td>Списки героїв, картки</td></tr>
+            <tr><td><code>surface2</code> · <code>surface3</code></td><td class="num"><span class="sw-c" style="--c:#1F2531"></span>#1F2531 · <span class="sw-c" style="--c:#283040"></span>#283040</td><td>Натиснутий стан, банер, скелетон · бейджі</td></tr>
+            <tr><td><code>border</code></td><td class="num"><span class="sw-c" style="--c:#2A3141"></span>#2A3141</td><td>Обведення 1 dp, розділювачі</td></tr>
+            <tr><td><code>text</code> · <code>textMuted</code></td><td class="num"><span class="sw-c" style="--c:#E9ECF2"></span>#E9ECF2 · <span class="sw-c" style="--c:#9AA3B5"></span>#9AA3B5</td><td>15,6 : 1 на bg · 6,7 : 1 на surface1</td></tr>
+            <tr><td><code>ink</code></td><td class="num"><span class="sw-c" style="--c:#1A1206"></span>#1A1206</td><td>Текст на заливці манго (9,6 : 1) і на бейджах тірів</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="overview">
+        <h2><span class="idx">02</span>Огляд головного екрана</h2>
+        <p>За <code>mobile/README.md</code> і <code>docs/DEMO_SCENARIO.md</code> головний екран — це мета. Після входу гравець бачить героїв поточного патча, згрупованих за тірами від S до C, з вінрейтом, пікрейтом і короткою підказкою від Gemini. Дотик по герою відкриває картку з AI-білдом.</p>
+        <ul class="dec">
+          <li><strong>Тір — головна група, вінрейт — головне число.</strong> У тірі герої йдуть за вінрейтом від більшого до меншого. Вінрейт стоїть праворуч великим моноширинним шрифтом, тож його видно краєм ока під час драфту.</li>
+          <li><strong>Колір вінрейту має лише два сигнали.</strong> Від 52 % він танго, до 48 % — фласка, усе між ними нейтральне. Так зелений не займає пів екрана й лишається помітним.</li>
+          <li><strong>Текст від AI завжди «смоковий».</strong> Фіолетова іскра і ледь фіолетовий текст показують, що <code>ai_summary</code> згенерував Gemini, а не бере статистика.</li>
+          <li><strong>Без нижньої навігації.</strong> Головний екран один, вхід і картка героя відкриваються поверх. Профіль і вихід ховаються під аватаром у шапці.</li>
+          <li><strong>Заглушка аватара (BUG-02).</strong> Поки картинка вантажиться або коли вона не завантажилась, на її місці монограма на кольорі атрибута.</li>
+          <li><strong>Офлайн-демо.</strong> Останню мету кешує Hive, тож у режимі польоту екран показує її з банером замість помилки.</li>
+        </ul>
+      </section>
+
+      <section id="anatomy">
+        <h2><span class="idx">03</span>Анатомія екрана</h2>
+        <p>Номери відповідають міткам на макеті. <button type="button" class="linkbtn" id="showAnat">Показати мітки на макеті</button></p>
+        <ol class="anat-list">
+          <li><span class="n2">1</span><div><strong>Шапка</strong> · 64 dp, прилипає до верху. Логотип-манго 40 dp і назва MangoDota, під ними індикатор «Патч 7.37d · оновлено 12 хв тому». Праворуч аватар, що відкриває меню профілю.</div></li>
+          <li><span class="n2">2</span><div><strong>Банер стану</strong> · від 44 dp, з’являється лише в офлайні. Іконка кольору кларетки.</div></li>
+          <li><span class="n2">3</span><div><strong>Заголовок</strong> «Мета героїв» і кількість героїв.</div></li>
+          <li><span class="n2">4</span><div><strong>Заголовок тіру</strong>: бейдж 32 dp кольору тіру, назва, опис і кількість героїв.</div></li>
+          <li><span class="n2">5</span><div><strong>Рядок героя</strong> · від 88 dp: аватар 48, ім’я, атрибут і дві перші ролі, AI-підказка у 2 рядки, праворуч вінрейт і пікрейт.</div></li>
+        </ol>
+      </section>
+
+      <section id="grid">
+        <h2><span class="idx">04</span>Сітка і ритм</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Блок</th><th>Розмір</th><th>Відступ зверху</th><th>Примітка</th></tr></thead>
+          <tbody>
+            <tr><td>Шапка</td><td class="num">64</td><td class="num">0</td><td>Sticky. Межа знизу з’являється, коли контент прокручено.</td></tr>
+            <tr><td>Банер</td><td class="num">≥ 44</td><td><code>space1</code></td><td>Тільки офлайн.</td></tr>
+            <tr><td>Заголовок «Мета героїв»</td><td class="num">28</td><td><code>space4</code></td><td>Шрифт Unbounded 22/28.</td></tr>
+            <tr><td>Секція тіру</td><td class="num">32 + 10 + рядки</td><td><code>space6</code></td><td>Порожні тіри не показуються.</td></tr>
+            <tr><td>Рядок героя</td><td class="num">≥ 88</td><td>—</td><td>Сітка 48 | 1fr | auto. AI-підказка — другий рядок сітки на всю ширину від імені до краю, щоб не тиснутись між ім’ям і вінрейтом. Поля 14/12, розділювач з відступом 72 dp зліва.</td></tr>
+            <tr><td>Колонка вінрейту</td><td class="num">≥ 56</td><td>—</td><td>Вирівняна праворуч, цифри табличні.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="tokens">
+        <h2><span class="idx">05</span>Тема у Flutter</h2>
+        <p>Усі значення лежать в <code>mobile/lib/core/theme/</code>, а віджети беруть їх тільки з <code>Theme.of(context)</code>.</p>
+        <div class="tbl"><table>
+          <thead><tr><th>Розхідник</th><th>ColorScheme</th><th>AppColors</th></tr></thead>
+          <tbody>
+            <tr><td>Манго</td><td><code>primary</code>, <code>onPrimary</code> = ink</td><td><code>mango</code>, <code>mangoSoft</code>, <code>tierS</code></td></tr>
+            <tr><td>Танго</td><td>—</td><td><code>tango</code>, <code>success</code>, <code>tierA</code></td></tr>
+            <tr><td>Фласка</td><td><code>error</code></td><td><code>salve</code>, <code>danger</code>, <code>tierC</code></td></tr>
+            <tr><td>Кларетка</td><td><code>secondary</code></td><td><code>clarity</code>, <code>info</code>, <code>tierB</code></td></tr>
+            <tr><td>Смок</td><td><code>tertiary</code></td><td><code>smoke</code>, <code>smokeSoft</code>, <code>ai</code></td></tr>
+            <tr><td>Даст</td><td>—</td><td><code>dust</code></td></tr>
+          </tbody>
+        </table></div>
+        <h3>Типографіка → TextTheme</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>TextTheme</th><th>Шрифт</th><th>Розмір / рядок</th><th>Де</th></tr></thead>
+          <tbody>
+            <tr><td><code>headlineSmall</code></td><td>Unbounded 600</td><td class="num">22 / 28</td><td>«Мета героїв», ім’я на картці героя</td></tr>
+            <tr><td><code>titleLarge</code></td><td>Unbounded 600</td><td class="num">17 / 22</td><td>Назва MangoDota в шапці</td></tr>
+            <tr><td><code>titleMedium</code></td><td>Onest 600</td><td class="num">17 / 22</td><td>Назва тіру</td></tr>
+            <tr><td><code>bodyLarge</code></td><td>Onest 400 / 600</td><td class="num">15 / 20</td><td>Ім’я героя в рядку (600)</td></tr>
+            <tr><td><code>bodyMedium</code></td><td>Onest 400</td><td class="num">13 / 18</td><td>AI-підказка, банер</td></tr>
+            <tr><td><code>bodySmall</code></td><td>Onest 400</td><td class="num">12 / 16</td><td>Індикатор, атрибут і ролі, опис тіру</td></tr>
+            <tr><td><code>labelLarge</code></td><td>Onest 600</td><td class="num">14 / 20</td><td>Кнопки</td></tr>
+            <tr><td><code>labelSmall</code></td><td>JetBrains Mono 600</td><td class="num">11 / 18</td><td>Пікрейт. Вінрейт — та сама роль, 15/20.</td></tr>
+          </tbody>
+        </table></div>
+        <p class="note">Відступи, радіуси, розміри й тривалості лишаються як були (<code>AppMetrics</code>): поля 16, між секціями 24, картки з радіусом 16, зона натискання 48.</p>
+      </section>
+
+      <section id="components">
+        <h2><span class="idx">06</span>Компоненти</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Віджет</th><th>Параметри</th><th>Нотатки</th></tr></thead>
+          <tbody>
+            <tr><td><code>MetaHeader</code></td><td><code>patch, updatedAt, status, user</code></td><td><code>SliverAppBar(pinned: true)</code>, логотип, назва, <code>UpdatedIndicator</code>, <code>ProfileButton</code>.</td></tr>
+            <tr><td><code>UpdatedIndicator</code></td><td><code>patch, updatedAt, status</code></td><td>Стани fresh · justSynced · refreshing · offline. Перемальовується раз на хвилину.</td></tr>
+            <tr><td><code>ProfileButton</code></td><td><code>email</code></td><td>Видимий круг 34 dp, зона 48. Відкриває нижню шторку з email і кнопкою «Вийти».</td></tr>
+            <tr><td><code>StatusBanner</code></td><td><code>message</code></td><td>Офлайн. Іконка кольору кларетки.</td></tr>
+            <tr><td><code>TierSection</code></td><td><code>tier, heroes</code></td><td>Бейдж, назва «S-тір», опис, кількість. Список — <code>Card</code> з рядками.</td></tr>
+            <tr><td><code>TierBadge</code></td><td><code>tier</code></td><td>32 × 32, радіус 9, заливка <code>tierS…tierC</code>, літера кольору ink.</td></tr>
+            <tr><td><code>MetaHeroRow</code></td><td><code>hero, onTap</code></td><td>Весь рядок — одна зона натискання (<code>InkWell</code>).</td></tr>
+            <tr><td><code>HeroAvatar</code></td><td><code>url, name, primaryAttr</code></td><td><code>Image.network</code> з <code>loadingBuilder</code> і <code>errorBuilder</code>, які показують монограму (BUG-02).</td></tr>
+            <tr><td><code>AiText</code></td><td><code>text, maxLines</code></td><td>Іскра кольору смоку + текст. Усюди, де показується вивід Gemini.</td></tr>
+            <tr><td><code>WinRate</code></td><td><code>winRate, pickRate</code></td><td>Колір: від 52 — <code>success</code>, до 48 — <code>danger</code>, інакше <code>onSurface</code>.</td></tr>
+            <tr><td><code>MetaErrorState</code></td><td><code>onRetry</code></td><td>Іконка кольору фласки, кнопка кольору манго.</td></tr>
+            <tr><td><code>AppSkeleton</code></td><td><code>width, height, radius</code></td><td>Відблиск кольору дасту, 1400 ms.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="interactions">
+        <h2><span class="idx">07</span>Взаємодії</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Елемент</th><th>Жест</th><th>Поведінка</th></tr></thead>
+          <tbody>
+            <tr><td>Рядок героя</td><td>Натиск</td><td>Фон <code>surface2</code> за 120 ms, потім <code>context.push('/hero/14')</code>.</td></tr>
+            <tr><td>Аватар профілю</td><td>Натиск</td><td>Нижня шторка: email, «Вийти». Вихід стирає токен і повертає на екран входу.</td></tr>
+            <tr><td>Екран</td><td>Потягнути вниз</td><td><code>RefreshIndicator</code> кольору манго робить запит <code>GET /api/meta/dota</code>. Після успіху індикатор показує «Щойно оновлено», а рядки один раз спалахують дастом.</td></tr>
+            <tr><td>«Спробувати ще раз»</td><td>Натиск</td><td>Кнопка вимикається, з’являються скелетони, далі контент або та сама помилка.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="states">
+        <h2><span class="idx">08</span>Стани екрана</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Стан</th><th>Коли</th><th>Що видно</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Звичайний</td><td>Свіжий кеш або відповідь API</td><td>Тіри, крапка танго, «оновлено N хв тому».</td><td><button type="button" class="show" data-show="default">Показати</button></td></tr>
+            <tr><td>Завантаження</td><td>Кешу ще немає</td><td>Скелетони тірів і рядків з відблиском дасту. Вимога TEST_PLAN: жодного білого екрана.</td><td><button type="button" class="show" data-show="loading">Показати</button></td></tr>
+            <tr><td>Офлайн</td><td>Мережі немає, у Hive є кеш</td><td>Банер, дані з кешу, сіра крапка, дата кешу.</td><td><button type="button" class="show" data-show="offline">Показати</button></td></tr>
+            <tr><td>Помилка</td><td>Немає ні мережі, ні кешу, або 5xx</td><td>Картка помилки з повтором.</td><td><button type="button" class="show" data-show="error">Показати</button></td></tr>
+            <tr><td>Щойно оновлено</td><td>Після pull-to-refresh або <code>/admin/sync</code> на демо</td><td>Індикатор кольору дасту «Щойно оновлено» і один спалах рядків.</td><td><button type="button" class="show" data-show="synced">Показати</button></td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="responsive">
+        <h2><span class="idx">09</span>Адаптивність</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Умова</th><th>Зміни</th></tr></thead>
+          <tbody>
+            <tr><td class="num">320–339 dp</td><td>Пікрейт ховається з рядка (лишається в озвученні), AI-підказка в 1 рядок.</td></tr>
+            <tr><td class="num">340–430 dp</td><td>Базовий макет.</td></tr>
+            <tr><td>Шрифт ≥ 130 %</td><td>Рядок росте, AI-підказка до 3 рядків, колонка вінрейту не стискається.</td></tr>
+            <tr><td>Орієнтація</td><td>Тільки портрет.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section id="content">
+        <h2><span class="idx">10</span>Контент і крайові випадки</h2>
+        <ul>
+          <li><strong>Числа.</strong> «53,4%» з комою, один знак після коми, табличні цифри.</li>
+          <li><strong>Час.</strong> До хвилини — «Щойно оновлено». Далі «Оновлено 12 хв тому», «Оновлено 3 год тому», «Оновлено вчора». <code>updated_at</code> приходить в UTC, показуємо за місцевим часом.</li>
+          <li><strong>Множина.</strong> «1 герой», «3 герої», «12 героїв» через <code>Intl.plural</code> з локаллю <code>uk</code>.</li>
+          <li><strong>Немає <code>ai_summary</code>.</strong> Рядок без AI-підказки, висота менша. Порожнє місце не лишаємо.</li>
+          <li><strong>Немає або невідомий <code>tier</code>.</strong> Герой іде в окрему секцію «Без тіру» наприкінці.</li>
+          <li><strong>Довгі імена</strong> на кшталт «Keeper of the Light» обрізаються в 1 рядок, колонка вінрейту не стискається.</li>
+          <li><strong>Аватари офлайн.</strong> <code>Image.network</code> не кешує на диск, тож у режимі польоту показуються монограми. Див. питання 3.</li>
+        </ul>
+      </section>
+
+      <section id="motion">
+        <h2><span class="idx">11</span>Анімація</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Елемент</th><th>Тригер</th><th>Анімація</th><th>Тривалість</th></tr></thead>
+          <tbody>
+            <tr><td>Рядок</td><td>Натиск</td><td>Фон <code>surface2</code></td><td class="num">120</td></tr>
+            <tr><td>Скелетон</td><td>Завантаження</td><td>Відблиск дасту зліва направо</td><td class="num">1400 loop</td></tr>
+            <tr><td>Рядки</td><td>Щойно оновлено</td><td>Один спалах дасту 12 % → 0</td><td class="num">1200</td></tr>
+            <tr><td>Межа шапки</td><td>Прокрутка</td><td>Прозорість</td><td class="num">120</td></tr>
+          </tbody>
+        </table></div>
+        <p>Якщо в системі ввімкнено зменшення анімацій, відблиск і спалах вимикаються.</p>
+      </section>
+
+      <section id="a11y">
+        <h2><span class="idx">12</span>Доступність</h2>
+        <div class="tbl"><table>
+          <thead><tr><th>Елемент</th><th>Озвучення</th></tr></thead>
+          <tbody>
+            <tr><td>Шапка</td><td>«MangoDota. Патч 7.37d, оновлено 12 хвилин тому»</td></tr>
+            <tr><td>Заголовок тіру</td><td>Заголовок: «S-тір, домінують у патчі, 1 герой»</td></tr>
+            <tr><td>Рядок</td><td>«Pudge, сила, вінрейт 53,4 відсотка, пікрейт 26,8 відсотка. Підказка AI: …»</td></tr>
+            <tr><td>Аватар профілю</td><td>«Профіль: player@example.com»</td></tr>
+          </tbody>
+        </table></div>
+        <ul>
+          <li>Колір ніколи не єдиний сигнал: тір дублюється літерою, вінрейт — числом, AI — іконкою та словом «AI» в озвученні.</li>
+          <li>Літери на бейджах тірів кольору ink мають контраст не нижче 5 : 1 на будь-якому розхіднику.</li>
+        </ul>
+      </section>
+
+      <section id="data">
+        <h2><span class="idx">13</span>Дані</h2>
+        <p>Контракт описано в <code>docs/openapi.yaml</code>. Мок — це <code>backend/database/seeds/meta.json</code> без змін. Flutter не бачить файлів за межами <code>mobile/</code>, тому мок копіюється в <code>mobile/assets/mocks/</code>.</p>
+<pre class="code"><code>GET /api/meta/dota  →  backend/database/seeds/meta.json
+{
+  "updated_at": "2026-10-08T09:00:00Z",
+  "patch": "7.37d",
+  "meta_heroes": [
+    { "id": 14, "name": "Pudge", "win_rate": 53.4, "pick_rate": 26.8,
+      "primary_attr": "str", "roles": ["Disabler", "Initiator", "Durable", "Nuker"],
+      "avatar_url": "https://cdn.cloudflare.steamstatic.com/…/pudge.png",
+      "tier": "S", "ai_summary": "Найпопулярніший герой пабліків…" }
+  ]
+}</code></pre>
+      </section>
+
+      <section id="questions">
+        <h2><span class="idx">14</span>Відкриті питання</h2>
+        <ol class="qs">
+          <li><strong>Назва в документах команди.</strong> На GitHub усюди «MangoData», а застосунок — MangoDota. Хто й де виправляє?</li>
+          <li><strong>C-тір.</strong> У TEST_PLAN згадано S, A і B, а схема БД дозволяє ще C. Показуємо C, якщо бекенд його віддасть?</li>
+          <li><strong>Аватари без мережі.</strong> Щоб на офлайн-демо були картинки, а не монограми, потрібен дисковий кеш, наприклад пакет <code>cached_network_image</code>. Додаємо?</li>
+        </ol>
+      </section>
+    </article>
+  </div>
+</div>
+
+<script>
+(function(){
+  var ICON = {
+    mango:'<path d="M15.6 6.2c3.1 1.5 4.4 5.1 3.2 8.6-1.4 4.2-5.6 6.6-9.4 5.4-3.3-1-4.9-4.3-3.9-7.8 1.2-4.1 5.7-7.8 10.1-6.2z" fill="#FFA62B"/><path d="M14.8 5.9c.4-2 2-3.3 4.3-3.4-.3 2.1-2 3.6-4.3 3.4z" fill="#7BC74D"/><path d="M14.4 6.3c-.2-.9-.6-1.6-1.2-2.1" stroke="#7BC74D" stroke-width="1.2" stroke-linecap="round" fill="none"/>',
+    tango:'<path d="M5 19.5c3.5-3 7-6.8 13.5-15" stroke="#5E9E39" stroke-width="1.6" stroke-linecap="round" fill="none"/><path d="M8.5 15.5c-2.8-.3-4.3-2-4.5-4.4 2.6.1 4.2 1.7 4.5 4.4z" fill="#7BC74D"/><path d="M12.4 11.3c-.4-2.8.8-4.6 3-5.6.6 2.6-.4 4.6-3 5.6z" fill="#7BC74D"/><path d="M11.6 13.1c2.6-1.2 4.7-.7 6.2 1.2-2.4 1.2-4.6.8-6.2-1.2z" fill="#7BC74D"/>',
+    salve:'<path d="M10 3.5h4M10.5 3.5v4.2L6.2 15.4A3 3 0 0 0 8.8 20h6.4a3 3 0 0 0 2.6-4.6l-4.3-7.7V3.5" stroke="#E9ECF2" stroke-opacity=".7" stroke-width="1.4" stroke-linejoin="round" fill="none"/><path d="M7.6 14.2h8.8l1.1 1.9A2.6 2.6 0 0 1 15.2 20H8.8a2.6 2.6 0 0 1-2.3-3.9z" fill="#F2545B"/>',
+    clarity:'<path d="M10 3.5h4M10.6 3.5V7.8a6.4 6.4 0 1 0 2.8 0V3.5" stroke="#E9ECF2" stroke-opacity=".7" stroke-width="1.4" stroke-linejoin="round" fill="none"/><path d="M6.2 13.6a5.8 5.8 0 0 0 11.6 0z" fill="#4DA3FF"/>',
+    smoke:'<path d="M6.8 18.5h10a3.7 3.7 0 0 0 .6-7.3 5.6 5.6 0 0 0-10.8-.9A4.1 4.1 0 0 0 6.8 18.5z" fill="#A27BFF" fill-opacity=".85"/><path d="M9 14.5c1.2-1.3 3-1.3 4.2 0" stroke="#10141B" stroke-opacity=".5" stroke-width="1.3" stroke-linecap="round" fill="none"/>',
+    dust:'<path d="M12 3.5l1.4 4.4 4.4 1.4-4.4 1.4L12 15.1l-1.4-4.4-4.4-1.4 4.4-1.4z" fill="#E9D8A6"/><path d="M18 14l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7zM6.5 15.5l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z" fill="#E9D8A6" fill-opacity=".75"/>',
+    spark:'<path d="M8 1.5l1.2 3.8 3.8 1.2-3.8 1.2L8 11.5 6.8 7.7 3 6.5l3.8-1.2z" fill="currentColor"/>',
+    wifiOff:'<path d="M2 8.8a15.5 15.5 0 0 1 4.5-2.8M10.5 5.1A15.5 15.5 0 0 1 22 8.8M5 12.6a10.5 10.5 0 0 1 5-2.5M16.6 10.7c.9.5 1.7 1.1 2.4 1.9M8.5 16.1a6 6 0 0 1 7 0M12 20h.01M3 3l18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+    alert:'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5v5.5M12 16.5h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    refresh:'<path d="M20 12a8 8 0 1 1-2.3-5.7L20 8.5M20 4v4.5h-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+  };
+  function svg(name,size,vb){size=size||24;return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+(vb||24)+' '+(vb||24)+'" aria-hidden="true">'+ICON[name]+'</svg>';}
+  document.querySelectorAll('[data-icon]').forEach(function(el){
+    var n=el.getAttribute('data-icon'); el.innerHTML=svg(n, el.classList.contains('glyph')?22:el.classList.contains('logo')?28:30);
+  });
+
+  var ATTR={str:{c:'#F2545B',l:'Сила'},agi:{c:'#7BC74D',l:'Спритність'},int:{c:'#4DA3FF',l:'Інтелект'},all:{c:'#A27BFF',l:'Універсал'}};
+  var TIERS=[
+    {t:'S',c:'#FFA62B',d:'Домінують у патчі'},
+    {t:'A',c:'#7BC74D',d:'Сильні й надійні'},
+    {t:'B',c:'#4DA3FF',d:'Ситуативні'},
+    {t:'C',c:'#F2545B',d:'Слабкі в цьому патчі'}
+  ];
+  var HEROES=[
+    {id:14,name:'Pudge',wr:53.4,pr:26.8,attr:'str',roles:['Disabler','Initiator'],tier:'S',ai:'Найпопулярніший герой пабліків. Високий темп завдяки ранньому роумінгу через Meat Hook.'},
+    {id:8,name:'Juggernaut',wr:51.8,pr:18.2,attr:'agi',roles:['Carry','Pusher'],tier:'A',ai:'Стабільний керрі для швидкого пушу. Вразливий до контролю через імунітет до магії (BKB-pierce).'},
+    {id:74,name:'Invoker',wr:50.1,pr:14.5,attr:'all',roles:['Carry','Nuker'],tier:'A',ai:'Універсальний мідлейнер з колосальним лейтовим прокастом. Вимагає високого мікроконтролю.'},
+    {id:5,name:'Crystal Maiden',wr:49.4,pr:9.1,attr:'int',roles:['Support','Disabler'],tier:'B',ai:'Саппорт з аурою мани для всієї команди. Крихка, програє швидкій ініціації.'},
+    {id:11,name:'Shadow Fiend',wr:48.6,pr:12.7,attr:'agi',roles:['Carry','Nuker'],tier:'B',ai:'Мідер, що живе душами. Слабкий проти ранньої агресії на лінії.'},
+    {id:90,name:'Keeper of the Light',wr:46.8,pr:3.9,attr:'int',roles:['Support','Nuker'],tier:'C',ai:'Нішевий саппорт для затяжних ігор. Програє агресивним лініям.'}
+  ];
+  function plural(n){var m10=n%10,m100=n%100; if(m10===1&&m100!==11) return n+' герой'; if(m10>=2&&m10<=4&&(m100<12||m100>14)) return n+' герої'; return n+' героїв';}
+  function pct(v){return v.toFixed(1).replace('.',',')+'%';}
+  function abbr(n){var p=n.split(' ');return (p.length>1?p[0][0]+p[p.length-1][0]:n.slice(0,2)).toUpperCase();}
+
+  var S={screen:'default',width:360};
+  var app=document.getElementById('app'), content=document.getElementById('content'), scrollEl=document.getElementById('scroll'),
+      head=document.getElementById('head'), upd=document.getElementById('upd'), toastEl=document.getElementById('toast'), phone=document.getElementById('phone');
+
+  function updHTML(){
+    upd.className='upd';
+    if(S.screen==='loading') return '<i class="busy"></i>Оновлюємо…';
+    if(S.screen==='offline') return '<i class="off"></i>Офлайн · дані від 8 жов, 09:12';
+    if(S.screen==='error') return '<i class="off"></i>Не вдалося оновити';
+    if(S.screen==='synced'){upd.className='upd fresh'; return '<i></i>Патч 7.37d · щойно оновлено';}
+    return '<i></i>Патч 7.37d · оновлено 12 хв тому';
+  }
+  function rowHTML(h){
+    var a=ATTR[h.attr], cls=h.wr>=52?'good':h.wr<=48?'bad':'';
+    var label=h.name+', '+a.l.toLowerCase()+', вінрейт '+pct(h.wr).replace('%',' відсотка')+', пікрейт '+pct(h.pr).replace('%',' відсотка')+'. Підказка AI: '+h.ai;
+    return '<button type="button" class="row'+(S.screen==='synced'?' flash':'')+'" data-act="hero" data-name="'+h.name+'" aria-label="'+label.replace(/"/g,'&quot;')+'">'+
+      '<span class="th" style="--attr:'+a.c+'" aria-hidden="true">'+abbr(h.name)+'</span>'+
+      '<span class="row-txt"><span class="n">'+h.name+'</span><span class="meta-l" style="--attr:'+a.c+'"><i></i>'+a.l+' · '+h.roles.join(', ')+'</span></span>'+
+      '<span class="wr"><b class="'+cls+'">'+pct(h.wr)+'</b><small>пік '+pct(h.pr)+'</small></span>'+
+      '<span class="ai">'+svg('spark',12,16)+'<span>'+h.ai+'</span></span></button>';
+  }
+  function tiersHTML(){
+    var out='', first=true;
+    TIERS.forEach(function(t){
+      var list=HEROES.filter(function(h){return h.tier===t.t;}).sort(function(a,b){return b.wr-a.wr;});
+      if(!list.length) return;
+      out+='<section class="tier" aria-label="'+t.t+'-тір"'+(first?' data-mk="4"':'')+'>'+(first?'<span class="mk" aria-hidden="true">4</span>':'')+
+        '<div class="tier-h"><span class="tb" style="--tc:'+t.c+'" aria-hidden="true">'+t.t+'</span><span class="tier-t"><b>'+t.t+'-тір</b><small>'+t.d+' · '+plural(list.length)+'</small></span></div>'+
+        '<div class="pl"'+(first?' data-mk="5" style="position:relative"':'')+'>'+(first?'<span class="mk" aria-hidden="true" style="left:auto;right:2px">5</span>':'')+list.map(rowHTML).join('')+'</div></section>';
+      first=false;
+    });
+    return out;
+  }
+  function skeletonHTML(){
+    var rows=''; for(var i=0;i<3;i++) rows+='<div class="row" aria-hidden="true"><span class="sk" style="width:48px;height:48px;border-radius:10px;flex:none"></span><span class="row-txt"><span class="sk" style="width:46%;height:14px"></span><span class="sk" style="width:62%;height:11px;margin-top:6px"></span><span class="sk" style="width:92%;height:11px;margin-top:10px"></span></span><span class="sk" style="width:48px;height:16px;flex:none"></span></div>';
+    var sec='<section class="tier"><div class="tier-h"><span class="sk" style="width:32px;height:32px;border-radius:9px"></span><span class="sk" style="width:120px;height:14px"></span></div><div class="pl">'+rows+'</div></section>';
+    return '<div aria-busy="true" aria-label="Завантаження мети">'+sec+sec+'</div>';
+  }
+  function render(){
+    upd.innerHTML=updHTML();
+    var h='';
+    if(S.screen==='offline') h+='<div class="a-banner" data-mk="2" role="status"><span class="mk" aria-hidden="true">2</span>'+svg('wifiOff',18)+'<span>Немає інтернету. Показуємо мету, збережену на пристрої 8 жов о 09:12.</span></div>';
+    if(S.screen==='error'){
+      h+='<div class="err" role="alert">'+svg('alert',30)+'<b>Не вдалося завантажити мету</b><p>Перевірте інтернет і спробуйте ще раз. Щойно дані завантажаться, вони працюватимуть і без мережі.</p><button type="button" class="btn" data-act="retry">'+svg('refresh',18)+'<span>Спробувати ще раз</span></button></div>';
+    } else {
+      h+='<div class="a-title" data-mk="3"><span class="mk" aria-hidden="true">3</span><h2>Мета героїв</h2><span>'+(S.screen==='loading'?'…':plural(HEROES.length))+'</span></div>';
+      h+=S.screen==='loading'?skeletonHTML():tiersHTML();
+    }
+    content.innerHTML=h;
+    document.querySelectorAll('[data-ctl] button').forEach(function(b){
+      var ctl=b.parentElement.getAttribute('data-ctl'), v=b.getAttribute('data-v');
+      b.setAttribute('aria-pressed',String(v===(ctl==='screen'?S.screen:String(S.width))));
+    });
+  }
+  var tt;
+  function toast(msg){toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(tt); tt=setTimeout(function(){toastEl.classList.remove('show');},3000);}
+
+  app.addEventListener('click',function(e){
+    var el=e.target.closest('[data-act]'); if(!el) return;
+    var a=el.getAttribute('data-act');
+    if(a==='hero') toast('Відкриється картка «'+el.getAttribute('data-name')+'» з AI-білдом');
+    else if(a==='profile') toast('Шторка профілю: player@example.com · Вийти');
+    else if(a==='retry'){ el.disabled=true; S.screen='loading'; render(); setTimeout(function(){S.screen='synced'; render();},1200); }
+  });
+  scrollEl.addEventListener('scroll',function(){head.classList.toggle('stuck',scrollEl.scrollTop>0);},{passive:true});
+  document.getElementById('controls').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    var ctl=b.parentElement.getAttribute('data-ctl'), v=b.getAttribute('data-v');
+    if(ctl==='screen'){S.screen=v; render();}
+    else if(ctl==='width'){S.width=+v; phone.style.width=(S.width+20)+'px'; render();}
+  });
+  var anat=document.getElementById('anatToggle');
+  anat.addEventListener('change',function(){app.classList.toggle('anat',anat.checked);});
+  function toStage(){ if(window.innerWidth<1080) document.getElementById('stage').scrollIntoView({behavior:'smooth',block:'start'}); }
+  document.getElementById('showAnat').addEventListener('click',function(){anat.checked=true; app.classList.add('anat'); if(S.screen!=='offline'){S.screen='offline'; render();} toStage();});
+  document.querySelectorAll('[data-show]').forEach(function(b){
+    b.addEventListener('click',function(){S.screen=b.getAttribute('data-show'); render(); toStage();});
+  });
+  render();
+})();
+</script>

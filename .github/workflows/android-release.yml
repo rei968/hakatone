@@ -1,0 +1,94 @@
+# Збирає підписаний APK MangoDota і публікує його в GitHub Releases.
+# Застосунок при старті бачить новий реліз і пропонує оновитися (mobile/lib/features/update).
+#
+# Запуск: тег `v0.2.0` (git tag v0.2.0 && git push origin v0.2.0) або вручну:
+# Actions → Android release → Run workflow → версія 0.2.0 (тег створиться сам).
+# Потрібні секрети репозиторію — див. mobile/docs/BUILD.md, розділ «Реліз».
+name: Android release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Версія без "v", наприклад 0.2.0'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Версія з тегу або з поля запуску
+        id: version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          VERSION="${INPUT_VERSION:-${GITHUB_REF_NAME#v}}"
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Версія має бути у форматі X.Y.Z, а не '$VERSION'"
+            exit 1
+          fi
+          IFS=. read -r MAJOR MINOR PATCH <<< "$VERSION"
+          # versionCode має лише рости: 0.2.0 -> 2000, 1.0.3 -> 1000003.
+          echo "name=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "code=$((MAJOR * 1000000 + MINOR * 1000 + PATCH))" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.6'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+      - name: Релізний ключ із секретів
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Немає секрету ANDROID_KEYSTORE_BASE64 (mobile/docs/BUILD.md, розділ «Реліз»)"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
+      - name: Збірка APK
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          flutter build apk --release --dart-define-from-file=config/app.json \
+            --build-name=${{ steps.version.outputs.name }} \
+            --build-number=${{ steps.version.outputs.code }}
+          cp build/app/outputs/flutter-apk/app-release.apk "MangoDota-${{ steps.version.outputs.name }}.apk"
+
+      - name: Публікація в GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.name }}
+          target_commitish: ${{ github.sha }}
+          name: MangoDota ${{ steps.version.outputs.name }}
+          files: mobile/MangoDota-${{ steps.version.outputs.name }}.apk
+          generate_release_notes: true

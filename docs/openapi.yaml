@@ -1,13 +1,31 @@
 openapi: 3.0.3
 info:
-  title: Kakatone Dota/Gaming Guide API
-  description: Dart Shelf REST API з інтеграцією OpenDota та Claude AI для мобільного клієнта (Flutter).
+  title: MangoDota API
+  description: Dart Shelf REST API (SQLite + OpenDota + Google Gemini API) для мобільного клієнта MangoDota (Flutter).
   version: 1.0.0
 servers:
   - url: http://localhost:8080
     description: Local Dart (shelf) server
 
 paths:
+  /api/health:
+    get:
+      summary: Health check сервера
+      responses:
+        '200':
+          description: Сервер працює
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    example: "2026-10-08T11:00:00Z"
+
   /api/auth/register:
     post:
       summary: Реєстрація нового користувача
@@ -24,6 +42,8 @@ paths:
                   example: "player@example.com"
                 password:
                   type: string
+                  minLength: 6
+                  maxLength: 128
                   example: "secret123"
       responses:
         '201':
@@ -33,7 +53,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         '400':
-          description: Невалідні дані або email зайнятий
+          description: |
+            Невалідні дані або email зайнятий. Код у полі `error`:
+            `email_taken`, `invalid_email`, `password_too_short`, `password_too_long`, `invalid_body`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "email_taken"
 
   /api/auth/login:
     post:
@@ -59,15 +87,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Тіло запиту не JSON або без `email`/`password` (`invalid_body`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
-          description: Невірний логін або пароль
+          description: Невірний логін або пароль (однаково для невідомого email і неправильного пароля)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "invalid_credentials"
 
   /api/meta/dota:
     get:
-      summary: Отримати список героїв актуальної мети (OpenDota + AI tier)
+      summary: Отримати список героїв актуальної мети (OpenDota + Gemini AI tier)
+      parameters:
+        - $ref: '#/components/parameters/Rank'
       responses:
         '200':
-          description: Актуальний мета-звіт
+          description: Актуальний мета-звіт (вінрейт, пікрейт і тір — для обраного рангу)
           content:
             application/json:
               schema:
@@ -75,18 +117,31 @@ paths:
                 properties:
                   updated_at:
                     type: string
-                    example: "2026-10-08T09:00:00Z"
+                    example: "2026-10-08T11:00:00Z"
                   patch:
                     type: string
-                    example: "7.37d"
+                    description: Останній патч з OpenDota `/constants/patch`
+                    example: "7.41"
+                  rank:
+                    type: string
+                    nullable: true
+                    description: Значення параметра `rank` або `all`
+                    example: "divine"
+                  total_matches:
+                    type: integer
+                    nullable: true
+                    description: Кількість матчів у вибірці цього рангу (сума pick / 10)
+                    example: 396740
                   meta_heroes:
                     type: array
                     items:
                       $ref: '#/components/schemas/MetaHero'
+        '400':
+          $ref: '#/components/responses/InvalidRank'
 
   /api/dota/heroes/{id}:
     get:
-      summary: Детальна картка героя з AI-білдом від Claude API
+      summary: Детальна картка героя з AI-білдом від Google Gemini API
       parameters:
         - name: id
           in: path
@@ -94,19 +149,30 @@ paths:
           schema:
             type: integer
             example: 14
+        - $ref: '#/components/parameters/Rank'
       responses:
         '200':
-          description: Дані героя з білдом
+          description: |
+            Дані героя з білдом. AI-білд один на героя, від рангу не залежить.
+            Білд без `talents` (старого формату) перегенеровується під час запиту; поки нового немає, віддається старий.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HeroWithBuild'
+        '400':
+          $ref: '#/components/responses/InvalidRank'
         '404':
           description: Героя не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "hero_not_found"
 
   /admin/sync:
     post:
-      summary: Ручний запуск синхронізації з OpenDota / Claude (для демо)
+      summary: Ручний запуск синхронізації з OpenDota та оновлення білдів через Gemini (для демо)
       security:
         - BearerAuth: []
       responses:
@@ -122,10 +188,30 @@ paths:
                     example: "ok"
                   synced_at:
                     type: string
-                    example: "2026-10-08T09:05:00Z"
+                    example: "2026-10-08T11:05:00Z"
                   heroes_updated:
                     type: integer
-                    example: 124
+                    example: 127
+        '401':
+          description: Немає заголовка `Authorization`, або токен невалідний чи прострочений
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "unauthorized"
+        '502':
+          description: OpenDota недоступний; дані в БД лишаються попередніми
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "error"
+                  error:
+                    type: string
 
 components:
   securitySchemes:
@@ -134,7 +220,43 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
+  parameters:
+    Rank:
+      name: rank
+      in: query
+      required: false
+      description: |
+        Ранг для вінрейту, пікрейту, тіру й `matches`: `herald`, `guardian`, `crusader`, `archon`,
+        `legend`, `ancient`, `divine` (Divine і вище: дужка Immortal в OpenDota порожня).
+        Без параметра або `all` — усі ранги. Невідоме значення — `400 invalid_rank`.
+      schema:
+        type: string
+        enum: [all, herald, guardian, crusader, archon, legend, ancient, divine]
+        example: divine
+
+  responses:
+    InvalidRank:
+      description: Невідоме значення параметра `rank`
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "invalid_rank"
+
   schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: |
+            Машинний код помилки, клієнт показує власний текст: `invalid_body`, `invalid_email`,
+            `password_too_short`, `password_too_long`, `email_taken`, `invalid_credentials`,
+            `unauthorized`, `hero_not_found`, `invalid_rank`, `not_found`
+          example: "invalid_credentials"
+
     AuthResponse:
       type: object
       properties:
@@ -169,6 +291,9 @@ components:
         primary_attr:
           type: string
           example: "str"
+        attack_type:
+          type: string
+          example: "Melee"
         roles:
           type: array
           items:
@@ -183,12 +308,45 @@ components:
         ai_summary:
           type: string
           example: "Найпопулярніший герой. Сильний ранній тиск через Meat Hook."
+        matches:
+          type: integer
+          nullable: true
+          description: Скільки разів героя взяли в цьому ранзі (`N_pick` або `pub_pick` з OpenDota)
+          example: 1083446
+        win_rate_delta:
+          type: number
+          nullable: true
+          description: |
+            Зміна вінрейту за тиждень у процентних пунктах: вінрейт діб 3–5 мінус діб 0–2
+            з `pub_win_trend`/`pub_pick_trend`. Завжди за всі ранги (трендів по рангах OpenDota не дає).
+          example: -0.4
 
     HeroWithBuild:
       allOf:
         - $ref: '#/components/schemas/MetaHero'
         - type: object
           properties:
+            bio:
+              type: string
+              example: "На Полях Вічної Різанини глибоко на південь від Квойджа..."
+            stats:
+              type: object
+              properties:
+                base_hp:
+                  type: integer
+                  example: 700
+                base_mana:
+                  type: integer
+                  example: 267
+                base_armor:
+                  type: number
+                  example: 1.5
+                movement_speed:
+                  type: integer
+                  example: 280
+                damage:
+                  type: string
+                  example: "70-76"
             abilities:
               type: array
               items:
@@ -202,23 +360,79 @@ components:
                     example: "Meat Hook"
                   description:
                     type: string
-                    example: "Запускає гак..."
+                    example: "Запускає кривавий гак..."
+                  cooldown:
+                    type: string
+                    example: "18/16/14/12"
+                  mana_cost:
+                    type: string
+                    example: "110/120/130/140"
                   icon_url:
                     type: string
                     example: "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/abilities/pudge_meat_hook.png"
+                  slot_order:
+                    type: integer
+                    example: 1
             ai_build:
               type: object
+              nullable: true
               properties:
                 skill_order:
                   type: array
                   items:
                     type: string
-                  example: ["Meat Hook", "Rot", "Meat Hook", "Flesh Heap", "Meat Hook", "Dismember"]
+                  description: |
+                    Рівно 18 елементів, рівні 1–18: назва здібності як `abilities[].name`, `"L"`/`"R"`,
+                    якщо на рівні береться талант, `"-"` на рівні без очка прокачки (у 7.41 — рівень 17).
+                    Старі білди можуть мати 6 елементів, поки не перегенеровані.
+                  example: ["Meat Hook", "Rot", "Meat Hook", "Meat Shield", "Meat Hook", "Dismember",
+                            "Meat Hook", "Rot", "Rot", "L", "Rot", "Dismember",
+                            "Meat Shield", "Meat Shield", "R", "Meat Shield", "-", "Dismember"]
+                talents:
+                  type: array
+                  nullable: true
+                  description: 4 таланти, рівні 10/15/20/25; `side` — лівий (`L`) або правий (`R`) у грі
+                  items:
+                    type: object
+                    properties:
+                      level:
+                        type: integer
+                        example: 10
+                      side:
+                        type: string
+                        enum: [L, R]
+                        example: "L"
+                      name:
+                        type: string
+                        example: "Rot Slow"
                 core_items:
                   type: array
                   items:
                     type: string
-                  example: ["Phase Boots", "Aghanim's Scepter", "Blink Dagger", "Black King Bar"]
+                  example: ["Phase Boots", "Blink Dagger", "Aghanim's Scepter", "Shiva's Guard", "Black King Bar"]
+                item_timings:
+                  type: object
+                  nullable: true
+                  description: |
+                    Назва предмета з `core_items` → середній таймінг покупки в секундах (OpenDota
+                    `/scenarios/itemTimings`, зважено на кількість ігор, усі ранги). Предмета без даних немає.
+                  additionalProperties:
+                    type: integer
+                  example: {"Phase Boots": 575, "Blink Dagger": 1145, "Aghanim's Scepter": 1354}
+                situational_items:
+                  type: array
+                  nullable: true
+                  description: 3–4 ситуативні предмети від AI
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: "Force Staff"
+                      reason:
+                        type: string
+                        description: Українською, до 40 символів
+                        example: "Порятунок союзників і втеча"
                 tactics:
                   type: string
-                  example: "Фокусуйтеся на контролі ворожого керрі під час файтів..."
+                  example: "Тримайте позицію в тумані війни для хука..."

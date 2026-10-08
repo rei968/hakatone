@@ -24,7 +24,7 @@ void main() {
     expect(pudge.stats?.baseHp, 700);
     expect(pudge.bio, isNotNull);
     expect([for (final a in pudge.abilities) a.slotOrder], [1, 2, 3, 4]);
-    expect(pudge.aiBuild?.skillOrder, hasLength(6));
+    expect(pudge.aiBuild?.skillOrder, hasLength(18));
     expect(pudge.aiBuild?.coreItems.first, 'Phase Boots');
   });
 

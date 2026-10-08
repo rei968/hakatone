@@ -1,0 +1,9 @@
+name: backend
+description: Game Directory Backend
+version: 1.0.0
+
+environment:
+  sdk: '^3.0.0'
+
+dependencies:
+  sqlite3: ^2.4.0

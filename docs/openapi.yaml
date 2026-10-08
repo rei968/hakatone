@@ -1,0 +1,282 @@
+openapi: 3.0.3
+info:
+  title: GameGuide Mobile API
+  description: REST API для мобільного довідника з комп'ютерних ігор (Dota 2, CS2 тощо)
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local Development Server
+
+paths:
+  /games:
+    get:
+      summary: Отримати список підтримуваних ігор
+      operationId: getGames
+      responses:
+        '200':
+          description: Успішна відповідь зі списком ігор
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Game'
+
+  /games/{gameSlug}:
+    get:
+      summary: Отримати детальну інформацію про гру та її категорії
+      operationId: getGameBySlug
+      parameters:
+        - name: gameSlug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: dota2
+      responses:
+        '200':
+          description: Деталі гри
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameDetail'
+        '404':
+          description: Гра не знайдена
+
+  /games/{gameSlug}/heroes:
+    get:
+      summary: Отримати список героїв або агентів гри
+      operationId: getHeroes
+      parameters:
+        - name: gameSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: role
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Фільтрація за роллю (Carry, Support тощо)
+        - name: attribute
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Головний атрибут (Strength, Agility, Intelligence)
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Пошук за назвою героя
+      responses:
+        '200':
+          description: Список героїв
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HeroSummary'
+
+  /heroes/{heroId}:
+    get:
+      summary: Детальна картка героя (характеристики, скіли, контрпіки, білди)
+      operationId: getHeroById
+      parameters:
+        - name: heroId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Повна інформація про героя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeroDetail'
+        '404':
+          description: Героя не знайдено
+
+  /games/{gameSlug}/weapons:
+    get:
+      summary: Отримати список зброї / спорядження (для шутерів на кшталт CS2)
+      operationId: getWeapons
+      parameters:
+        - name: gameSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Rifle, Pistol, SMG, Heavy, Sniper
+      responses:
+        '200':
+          description: Список зброї
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Weapon'
+
+components:
+  schemas:
+    Game:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "dota2"
+        slug:
+          type: string
+          example: "dota2"
+        title:
+          type: string
+          example: "Dota 2"
+        description:
+          type: string
+          example: "Багатокористувацька онлайн-бойова арена (MOBA) від Valve."
+        iconUrl:
+          type: string
+          example: "https://example.com/icons/dota2.png"
+        bannerUrl:
+          type: string
+          example: "https://example.com/banners/dota2.png"
+        supportedCategories:
+          type: array
+          items:
+            type: string
+          example: ["heroes", "items", "guides"]
+
+    GameDetail:
+      allOf:
+        - $ref: '#/components/schemas/Game'
+        - type: object
+          properties:
+            developer:
+              type: string
+              example: "Valve"
+            genre:
+              type: string
+              example: "MOBA"
+            latestPatch:
+              type: string
+              example: "7.37d"
+
+    HeroSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "pudge"
+        name:
+          type: string
+          example: "Pudge"
+        primaryAttribute:
+          type: string
+          example: "Strength"
+        attackType:
+          type: string
+          example: "Melee"
+        roles:
+          type: array
+          items:
+            type: string
+          example: ["Disabler", "Initiator", "Durable", "Nuker"]
+        avatarUrl:
+          type: string
+          example: "https://example.com/heroes/pudge.png"
+
+    Ability:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "meat_hook"
+        name:
+          type: string
+          example: "Meat Hook"
+        description:
+          type: string
+          example: "Запускає кривавий гак у вказану точку, що притягує першого юніта..."
+        cooldown:
+          type: string
+          example: "18/16/14/12"
+        manaCost:
+          type: string
+          example: "110/120/130/140"
+        iconUrl:
+          type: string
+          example: "https://example.com/abilities/meat_hook.png"
+
+    HeroDetail:
+      allOf:
+        - $ref: '#/components/schemas/HeroSummary'
+        - type: object
+          properties:
+            bio:
+              type: string
+              example: "На Полях Вічної Різанини..."
+            stats:
+              type: object
+              properties:
+                baseHp:
+                  type: integer
+                  example: 670
+                baseMana:
+                  type: integer
+                  example: 267
+                armor:
+                  type: number
+                  example: 1.8
+                movementSpeed:
+                  type: integer
+                  example: 280
+            abilities:
+              type: array
+              items:
+                $ref: '#/components/schemas/Ability'
+            counterPicks:
+              type: array
+              items:
+                type: string
+              example: ["lifestealer", "ursa", "necrophos"]
+
+    Weapon:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "ak47"
+        name:
+          type: string
+          example: "AK-47"
+        side:
+          type: string
+          example: "T"
+        category:
+          type: string
+          example: "Rifle"
+        price:
+          type: integer
+          example: 2700
+        killAward:
+          type: integer
+          example: 300
+        damage:
+          type: integer
+          example: 36
+        magazineSize:
+          type: integer
+          example: 30
+        imageUrl:
+          type: string
+          example: "https://example.com/weapons/ak47.png"

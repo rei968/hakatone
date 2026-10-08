@@ -1,0 +1,62 @@
+{
+  "game": {
+    "id": "cs2",
+    "slug": "cs2",
+    "title": "Counter-Strike 2",
+    "developer": "Valve",
+    "genre": "Tactical FPS",
+    "description": "Тактичний шутер від першої особи наступного покоління на рушії Source 2.",
+    "iconUrl": "https://cdn.cloudflare.steamstatic.com/apps/csgo/images/csgo_react/global/logo_cs_small.svg",
+    "bannerUrl": "https://cdn.cloudflare.steamstatic.com/apps/csgo/images/csgo_react/social/cs2.jpg"
+  },
+  "weapons": [
+    {
+      "id": "ak47",
+      "name": "AK-47",
+      "side": "T",
+      "category": "Rifle",
+      "price": 2700,
+      "killAward": 300,
+      "damage": 36,
+      "magazineSize": 30,
+      "description": "Потужна та надійна штурмова гвинтівка. Смертоносна в руках майстра: одне точне влучання в голову ліквідує будь-якого суперника, навіть у шоломі.",
+      "imageUrl": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/default_generated/weapon_ak47_light_png.png"
+    },
+    {
+      "id": "m4a1_s",
+      "name": "M4A1-S",
+      "side": "CT",
+      "category": "Rifle",
+      "price": 2900,
+      "killAward": 300,
+      "damage": 38,
+      "magazineSize": 20,
+      "description": "Штурмова гвинтівка з глушником для спецпризначенців. Менша віддача та висока точність, але обмежений розмір магазину.",
+      "imageUrl": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/default_generated/weapon_m4a1_silencer_light_png.png"
+    },
+    {
+      "id": "awp",
+      "name": "AWP",
+      "side": "ALL",
+      "category": "Sniper",
+      "price": 4750,
+      "killAward": 100,
+      "damage": 115,
+      "magazineSize": 5,
+      "description": "Легендарна снайперська гвинтівка з високим ризиком і високою нагородою. Одне влучання в тіло або голову гарантує миттєву ліквідацію цілі.",
+      "imageUrl": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/default_generated/weapon_awp_light_png.png"
+    },
+    {
+      "id": "deagle",
+      "name": "Desert Eagle",
+      "side": "ALL",
+      "category": "Pistol",
+      "price": 700,
+      "killAward": 300,
+      "damage": 53,
+      "magazineSize": 7,
+      "description": "Культовий пістолет великого калібру. Складна віддача, але колосальна вогнева міць і можливість ваншоту в голову на середніх дистанціях.",
+      "imageUrl": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/default_generated/weapon_deagle_light_png.png"
+    }
+  ]
+}

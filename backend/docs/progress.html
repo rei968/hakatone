@@ -1,0 +1,284 @@
+<title>Прогрес бекенду MangoDota</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Onest:wght@400;500;600;700&family=Unbounded:wght@600&display=swap">
+<style>
+/* Layout: the frontend dashboard's one-screen tool. Left: checklist parsed from backend/TODO.md. Right: the selected item's details and next step. */
+:root{
+  --paper:#F4F5F8; --card:#FFFFFF; --ink:#141820; --ink-2:#465063; --ink-3:#687185; --rule:#DDE1E8; --code:#ECEEF3; --hover:#ECEFF4; --sel:#FFF3E2;
+  --mark:#9A5800; --on-mark:#FFFFFF; --mango:#FFA62B; --leaf:#7BC74D; --mango-soft:#FFA62B24;
+  --st-done:#3E8A1F; --st-work:#B86A00; --st-review:#1F6FD1; --st-todo:#8A93A6;
+  --f-display:"Unbounded", ui-sans-serif, system-ui, sans-serif;
+  --f-body:"Onest", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0B0D12; --card:#12161D; --ink:#E6E9EF; --ink-2:#A3ABBC; --ink-3:#7E879A; --rule:#242A35; --code:#191E27; --hover:#171C25; --sel:#FFA62B1A;
+    --mark:#FFA62B; --on-mark:#1A1206;
+    --st-done:#7BC74D; --st-work:#FFA62B; --st-review:#4DA3FF; --st-todo:#5E6779; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0B0D12; --card:#12161D; --ink:#E6E9EF; --ink-2:#A3ABBC; --ink-3:#7E879A; --rule:#242A35; --code:#191E27; --hover:#171C25; --sel:#FFA62B1A;
+  --mark:#FFA62B; --on-mark:#1A1206;
+  --st-done:#7BC74D; --st-work:#FFA62B; --st-review:#4DA3FF; --st-todo:#5E6779; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 14px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+code{font:500 .86em/1.4 var(--f-mono);background:var(--code);padding:.1em .35em;border-radius:4px;overflow-wrap:anywhere}
+
+.shell{display:grid;grid-template-columns:340px minmax(0,1fr);height:100%}
+.side{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--rule);background:var(--card)}
+.side-head{padding:18px 16px 14px;border-bottom:1px solid var(--rule)}
+.brand{display:flex;align-items:center;gap:10px;font:600 15px/1 var(--f-display);letter-spacing:-.01em}
+.brand .g{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--mango-soft)}
+.brand em{font-style:normal;color:var(--mark)}
+.side-head h1{margin:14px 0 2px;font:600 18px/24px var(--f-body);text-wrap:balance}
+.sync{font:500 11px/16px var(--f-mono);color:var(--ink-3)}
+.bar{display:flex;height:8px;margin-top:12px;border-radius:4px;overflow:hidden;background:var(--rule);gap:2px}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend b{font-weight:600;color:var(--ink)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.tally{margin-top:6px;font:500 11px/16px var(--f-mono);color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+.list{flex:1;min-height:0;overflow-y:auto;padding:8px 8px 24px}
+.grp{margin:14px 8px 4px;font:500 11px/16px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.it{display:grid;grid-template-columns:22px minmax(0,1fr) 16px;gap:10px;align-items:start;width:100%;padding:9px 8px;border:0;border-radius:10px;background:none;text-align:left;cursor:pointer}
+.it:hover{background:var(--hover)}
+.it[aria-current="true"]{background:var(--sel)}
+.it-t{display:flex;flex-direction:column;min-width:0}
+.it-t b{font-weight:600;font-size:14px;line-height:20px}
+.it-t b .n{font:600 12px/20px var(--f-mono);color:var(--ink-3);margin-right:6px}
+.it-t small{font-size:12px;line-height:16px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.chev{margin-top:3px;color:var(--ink-3);transition:transform .15s}
+.it[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.sub{list-style:none;margin:0 0 6px;padding:0 8px 0 40px;display:grid;gap:6px}
+.sub li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px;font-size:13px;line-height:18px;color:var(--ink-2)}
+.sub li.x{color:var(--ink-3)}
+.sub li.note{grid-template-columns:minmax(0,1fr);font-style:italic}
+.sub a,.det a{color:inherit;text-decoration:underline;text-decoration-color:var(--mark);text-underline-offset:2px}
+
+/* status icons */
+.ic{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;flex:none}
+.ic.done{background:var(--st-done);color:var(--card)}
+.ic.work{border:2px solid var(--st-work);background:linear-gradient(90deg,var(--st-work) 50%,transparent 50%)}
+.ic.review{border:2px solid var(--st-review)}
+.ic.review::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--st-review)}
+.ic.todo{border:2px solid var(--st-todo)}
+.ic.skip{border:2px dashed var(--st-todo)}
+.ic.skip::after{content:"";width:8px;height:2px;background:var(--st-todo)}
+.cb{width:14px;height:14px;margin-top:2px;border-radius:4px;border:1.5px solid var(--st-todo);display:grid;place-items:center}
+.cb.x{background:var(--st-done);border-color:var(--st-done);color:var(--card)}
+.cb.w{border-color:var(--st-work);background:linear-gradient(135deg,var(--st-work) 50%,transparent 50%)}
+
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.main-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--rule);background:var(--card)}
+.main-head h2{margin:0;font:600 16px/22px var(--f-body);min-width:0}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font:600 12px/16px var(--f-body);border:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.det{flex:1;min-height:0;overflow:auto;padding:24px 28px}
+.det h3{margin:0 0 4px;font:600 22px/28px var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.det .why{margin:0 0 18px;color:var(--ink-2);max-width:60ch}
+.det ul{list-style:none;padding:0;margin:0;display:grid;gap:10px;max-width:70ch}
+.det li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;font-size:15px;line-height:22px}
+.det li span{min-width:0}
+.det .next{margin-top:22px;padding:14px 16px;border:1px solid var(--rule);border-radius:12px;background:var(--card);max-width:70ch}
+.det .next b{display:block;font:500 11px/16px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.qs{margin:0;padding-left:20px;display:grid;gap:10px;max-width:70ch;font-size:15px;line-height:22px}
+.err{padding:24px;color:var(--ink-2)}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr;height:auto}
+  .side{border-right:0;border-bottom:1px solid var(--rule)}
+  .list{overflow:visible}
+  .main{min-height:60vh}
+  .main-head{padding:12px 16px}
+  .det{padding:20px 16px}
+}
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+</style>
+
+<div class="shell">
+  <aside class="side" aria-label="Чекліст бекенду">
+    <div class="side-head">
+      <div class="brand"><span class="g"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.6 6.2c3.1 1.5 4.4 5.1 3.2 8.6-1.4 4.2-5.6 6.6-9.4 5.4-3.3-1-4.9-4.3-3.9-7.8 1.2-4.1 5.7-7.8 10.1-6.2z" fill="var(--mango)"/><path d="M14.8 5.9c.4-2 2-3.3 4.3-3.4-.3 2.1-2 3.6-4.3 3.4z" fill="var(--leaf)"/></svg></span><span>Mango<em>Dota</em></span></div>
+      <h1>Прогрес бекенду</h1>
+      <div class="sync" id="sync">Читаю TODO.md…</div>
+      <div class="bar" id="bar" aria-hidden="true"></div>
+      <div class="legend" id="legend"></div>
+      <div class="tally" id="tally"></div>
+    </div>
+    <nav class="list" id="list"></nav>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+(function(){
+  var ST={
+    done:{l:'Готово',c:'var(--st-done)'},
+    review:{l:'На перевірці',c:'var(--st-review)'},
+    work:{l:'В роботі',c:'var(--st-work)'},
+    todo:{l:'Не почато',c:'var(--st-todo)'},
+    skip:{l:'Не потрібно',c:'var(--st-todo)'}
+  };
+  var ORDER=['done','review','work','todo','skip'];
+  var WHY={
+    done:'Усе зроблено.',
+    review:'Код готовий і чекає рев’ю. Нижче те, що увійшло.',
+    work:'Нижче те, що зроблено, і те, що лишилось.',
+    todo:'Ще не почато.',
+    skip:'Не входить у демо, повернемось після.'
+  };
+  var CHECK='<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2 5 8.6l4.5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var CHEV='<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  // Locally (page served from backend/docs/) it reads the live backend/TODO.md;
+  // the published version reads the TODO.md snapshot published next to it.
+  var PATHS=['../TODO.md','TODO.md'];
+  var state={sections:[],sel:null,open:{},raw:'',mode:null};
+  var listEl=document.getElementById('list'), mainEl=document.getElementById('main');
+
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function inline(s){
+    var h=esc(s);
+    h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
+    h=h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+    h=h.replace(/\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+    return h;
+  }
+  function parse(md){
+    var secs=[], cur=null;
+    md.split(/\r?\n/).forEach(function(line){
+      var m;
+      if((m=/^##\s+(.+?)\s*$/.exec(line))){
+        var title=m[1], marker=null, mm=/\s*\((на перевірці|не потрібно)\)\s*$/i.exec(title);
+        if(mm){marker=mm[1].toLowerCase(); title=title.slice(0,mm.index);}
+        var nm=/^(\d+)\.\s+(.*)$/.exec(title);
+        cur={id:'s'+secs.length,num:nm?+nm[1]:null,title:nm?nm[2]:title,marker:marker,items:[],notes:[],qs:[]};
+        secs.push(cur); return;
+      }
+      if(!cur) return;
+      if((m=/^- \[( |x|~)\]\s+(.+)$/i.exec(line))) cur.items.push({s:m[1].toLowerCase(),t:m[2]});
+      else if((m=/^- (.+)$/.exec(line))) cur.notes.push(m[1]);
+      else if((m=/^\d+\.\s+(.+)$/.exec(line))) cur.qs.push(m[1]);
+    });
+    secs.forEach(function(s){
+      var n=s.items.length;
+      var x=s.items.filter(function(i){return i.s==='x';}).length;
+      var w=s.items.filter(function(i){return i.s==='~';}).length;
+      s.done=x; s.total=n;
+      s.status= s.marker==='не потрібно'?'skip' : s.marker==='на перевірці'?'review' : (n&&x===n)?'done' : (x||w)?'work' : s.qs.length?'q' : 'todo';
+    });
+    return secs;
+  }
+  function icon(st){return '<span class="ic '+st+'">'+(st==='done'?CHECK:'')+'</span>';}
+  function cb(s){return '<span class="cb '+(s==='x'?'x':s==='~'?'w':'')+'">'+(s==='x'?CHECK:'')+'</span>';}
+  function board(){return state.sections.filter(function(s){return s.num!==null;});}
+
+  function renderSide(){
+    var b=board();
+    var other=state.sections.filter(function(s){return s.num===null&&s.status!=='q';});
+    var qs=state.sections.filter(function(s){return s.status==='q';});
+    var cnt={done:0,review:0,work:0,todo:0,skip:0}, done=0, total=0;
+    b.forEach(function(s){cnt[s.status]++; done+=s.done; total+=s.total;});
+    document.getElementById('bar').innerHTML=ORDER.map(function(k){
+      return cnt[k]?'<i style="flex:'+cnt[k]+';background:'+ST[k].c+(k==='skip'?';opacity:.45':'')+'"></i>':'';
+    }).join('');
+    document.getElementById('legend').innerHTML=ORDER.filter(function(k){return cnt[k];}).map(function(k){
+      return '<span><i class="dot" style="background:'+ST[k].c+'"></i>'+ST[k].l+' <b>'+cnt[k]+'</b></span>';
+    }).join('');
+    document.getElementById('tally').textContent=total?'Пунктів на дошці: '+done+' / '+total+' · '+Math.round(done/total*100)+'%':'';
+
+    function item(s){
+      var exp=!!state.open[s.id], cur=state.sel===s.id;
+      var meta=ST[s.status]?ST[s.status].l:'Питання · '+s.qs.length;
+      if(s.total) meta+=' · '+s.done+'/'+s.total;
+      var sub='';
+      if(exp){
+        sub='<ul class="sub">'+
+          s.items.map(function(i){return '<li class="'+(i.s==='x'?'x':'')+'">'+cb(i.s)+'<span>'+inline(i.t)+'</span></li>';}).join('')+
+          s.notes.map(function(n){return '<li class="note"><span>'+inline(n)+'</span></li>';}).join('')+'</ul>';
+      }
+      return '<button type="button" class="it" data-id="'+s.id+'" aria-expanded="'+exp+'" aria-current="'+cur+'">'+
+        (s.status==='q'?'<span class="ic review"></span>':icon(s.status))+
+        '<span class="it-t"><b>'+(s.num!==null?'<span class="n">'+s.num+'</span>':'')+inline(s.title)+'</b><small>'+meta+'</small></span>'+
+        '<span class="chev">'+CHEV+'</span></button>'+sub;
+    }
+    listEl.innerHTML='<div class="grp">Дошка</div>'+b.map(item).join('')+
+      (other.length?'<div class="grp">Супутнє</div>'+other.map(item).join(''):'')+
+      (qs.length?'<div class="grp">Питання до команди</div>'+qs.map(item).join(''):'');
+  }
+
+  function renderMain(){
+    var s=state.sections.filter(function(x){return x.id===state.sel;})[0];
+    if(!s){mainEl.innerHTML='';return;}
+    var st=ST[s.status]||{l:'Питання',c:'var(--st-review)'};
+    var head='<div class="main-head"><span class="chip" style="color:'+st.c+';border-color:'+st.c+'">'+st.l+(s.total?' · '+s.done+'/'+s.total:'')+'</span>'+
+      '<h2>'+(s.num!==null?s.num+'. ':'')+inline(s.title)+'</h2></div>';
+    var body;
+    if(s.status==='q'){
+      body='<h3>'+inline(s.title)+'</h3><p class="why">Тут потрібні рішення команди.</p><ol class="qs">'+
+        s.qs.map(function(q){return '<li>'+inline(q)+'</li>';}).join('')+'</ol>';
+    } else {
+      var next=s.items.filter(function(i){return i.s!=='x';})[0];
+      body='<h3>'+inline(s.title)+'</h3><p class="why">'+WHY[s.status]+'</p><ul>'+
+        s.items.map(function(i){return '<li>'+cb(i.s)+'<span>'+inline(i.t)+'</span></li>';}).join('')+
+        s.notes.map(function(n){return '<li><span></span><span>'+inline(n)+'</span></li>';}).join('')+'</ul>'+
+        (next&&s.status!=='skip'?'<div class="next"><b>Наступний крок</b>'+inline(next.t)+'</div>':'');
+    }
+    mainEl.innerHTML=head+'<div class="det">'+body+'</div>';
+  }
+
+  function pickDefault(){
+    var b=board();
+    var p=b.filter(function(s){return s.status==='work';})[0]||b.filter(function(s){return s.status==='review';})[0]||b[0];
+    return p?p.id:null;
+  }
+  function stamp(){
+    var d=new Date();
+    return [d.getHours(),d.getMinutes(),d.getSeconds()].map(function(n){return String(n).padStart(2,'0');}).join(':');
+  }
+  function load(){
+    var i=0;
+    (function next(){
+      if(i>=PATHS.length){
+        document.getElementById('sync').textContent='Не вдалося прочитати TODO.md. Відкрийте сторінку через локальний сервер.';
+        if(!state.sections.length) mainEl.innerHTML='<p class="err">Чекліст береться з backend/TODO.md, а цей файл зараз недоступний.</p>';
+        return;
+      }
+      var idx=i;
+      fetch(PATHS[i++],{cache:'no-store'}).then(function(r){
+        if(!r.ok||/html/i.test(r.headers.get('content-type')||'')) throw 0;
+        return r.text();
+      }).then(function(t){
+        if(!/^##\s/m.test(t)) throw 0;
+        var mode=idx===0?'local':'published', modeChanged=state.mode!==mode;
+        state.mode=mode;
+        document.getElementById('sync').textContent=mode==='local'
+          ?'З backend/TODO.md · перевірено о '+stamp()
+          :'Знімок backend/TODO.md · оновлюється з кожною публікацією';
+        if(t===state.raw&&!modeChanged) return;
+        state.raw=t; state.sections=parse(t);
+        if(!state.sel||!state.sections.some(function(s){return s.id===state.sel;})){
+          state.sel=pickDefault(); if(state.sel) state.open[state.sel]=true;
+        }
+        renderSide(); renderMain();
+      }).catch(next);
+    })();
+  }
+
+  listEl.addEventListener('click',function(e){
+    if(e.target.closest('a')) return;
+    var b=e.target.closest('.it'); if(!b) return;
+    var id=b.getAttribute('data-id');
+    if(state.sel===id) state.open[id]=!state.open[id]; else { state.sel=id; state.open[id]=true; }
+    renderSide(); renderMain();
+  });
+  load(); setInterval(function(){ if(state.mode==='local') load(); },4000);
+})();
+</script>

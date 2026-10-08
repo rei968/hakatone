@@ -21,7 +21,7 @@ erDiagram
         text avatar_url "Посилання на аватар"
         text bio "Лор героя"
         text stats "JSON об'єкт: {'base_hp':700,'base_mana':267}"
-        text ai_summary "Короткий опис від Claude AI"
+        text ai_summary "Короткий опис від Google Gemini AI"
         datetime created_at
     }
 
@@ -41,7 +41,7 @@ erDiagram
         int hero_id FK "heroes.id (UNIQUE, CASCADE)"
         text skill_order "JSON масив: ['Meat Hook','Rot']"
         text core_items "JSON масив: ['Phase Boots','Blink']"
-        text tactics "Тактичні поради від Claude API"
+        text tactics "Тактичні поради від Google Gemini API"
         datetime updated_at
     }
 ```

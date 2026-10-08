@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS heroes (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     primary_attr TEXT,
+    attack_type TEXT,       -- "Melee" / "Ranged" (OpenDota heroStats.attack_type)
     win_rate REAL,
     pick_rate REAL,
     tier TEXT,
@@ -34,6 +35,13 @@ CREATE TABLE IF NOT EXISTS ai_builds (
     core_items TEXT,        -- Зберігається як JSON-масив: '["Phase Boots","Blink Dagger"]'
     tactics TEXT,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,            -- "usr_" + 16 hex, як user.id в AuthResponse
+    email TEXT UNIQUE NOT NULL,     -- у нижньому регістрі
+    password_hash TEXT NOT NULL,    -- pbkdf2_sha256$<iterations>$<salt>$<hash>
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_heroes_tier ON heroes(tier);

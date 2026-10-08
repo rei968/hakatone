@@ -13,7 +13,7 @@ import '../../meta/presentation/widgets/tier_section.dart';
 import '../application/hero_providers.dart';
 import '../domain/hero_details.dart';
 
-/// Картка героя з AI-білдом від Claude (`GET /api/dota/heroes/{id}`).
+/// Картка героя з AI-білдом від Gemini (`GET /api/dota/heroes/{id}`).
 class HeroScreen extends ConsumerWidget {
   const HeroScreen({super.key, required this.heroId});
 
@@ -306,7 +306,7 @@ class _AiBuildCard extends StatelessWidget {
               children: [
                 Icon(Icons.auto_awesome, size: 18, color: colors.smoke),
                 SizedBox(width: m.space2),
-                Expanded(child: Text('AI-білд від Claude', style: context.text.titleMedium)),
+                Expanded(child: Text('AI-білд від Gemini', style: context.text.titleMedium)),
               ],
             ),
           ),

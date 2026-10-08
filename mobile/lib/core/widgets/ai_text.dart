@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/theme_context.dart';
 
-/// Текст, який згенерував Claude: іскра кольору смоку й ледь фіолетовий текст.
+/// Текст, який згенерував AI (Gemini на бекенді): іскра кольору смоку й ледь фіолетовий текст.
 /// Так гравець одразу відрізняє AI-підказку від статистики.
 class AiText extends StatelessWidget {
   const AiText(this.text, {super.key, this.maxLines, this.style});

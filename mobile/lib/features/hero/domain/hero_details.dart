@@ -46,7 +46,7 @@ class Ability {
       };
 }
 
-/// `HeroWithBuild.ai_build` — білд, який згенерував Claude.
+/// `HeroWithBuild.ai_build` — білд, який згенерував Gemini.
 @immutable
 class AiBuild {
   const AiBuild({required this.skillOrder, required this.coreItems, required this.tactics});

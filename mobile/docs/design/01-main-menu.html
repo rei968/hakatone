@@ -218,7 +218,7 @@ pre.code code{background:none;padding:0;white-space:pre;font-size:inherit}
       <span>Handoff · v0.3 · 8 жовтня 2026</span>
     </div>
     <h1>Головне меню</h1>
-    <p class="lede">Головний екран MangoDota: мета Dota 2 за тірами, вінрейти й короткі AI-підказки від Claude. Кольори інтерфейсу взяті з розхідників: манго, танго, фласка, кларетка, смок і даст. Ліворуч інтерактивний макет, праворуч палітра та специфікація для Flutter.</p>
+    <p class="lede">Головний екран MangoDota: мета Dota 2 за тірами, вінрейти й короткі AI-підказки від Gemini. Кольори інтерфейсу взяті з розхідників: манго, танго, фласка, кларетка, смок і даст. Ліворуч інтерактивний макет, праворуч палітра та специфікація для Flutter.</p>
     <dl class="facts">
       <div><dt>Платформа</dt><dd>Android (APK), Flutter</dd></div>
       <div><dt>Базовий макет</dt><dd class="num">360 × 780 dp</dd></div>
@@ -299,7 +299,7 @@ pre.code code{background:none;padding:0;white-space:pre;font-size:inherit}
           </div>
           <div class="swatch" style="--c:#A27BFF">
             <div class="sw-top"><span class="chip" data-icon="smoke"></span><span class="hex">#A27BFF</span></div><div class="sw-bar"></div>
-            <div class="sw-body"><b>Смок<small>Smoke of Deceit</small></b><span class="sw-role">Усе, що згенерував AI: <code>ai_summary</code>, AI-білд, тактика.</span><span class="sw-why">Непомітна перевага перед ганком — так працює підказка від Claude. 5,5 : 1.</span></div>
+            <div class="sw-body"><b>Смок<small>Smoke of Deceit</small></b><span class="sw-role">Усе, що згенерував AI: <code>ai_summary</code>, AI-білд, тактика.</span><span class="sw-why">Непомітна перевага перед ганком — так працює підказка від Gemini. 5,5 : 1.</span></div>
           </div>
           <div class="swatch" style="--c:#E9D8A6">
             <div class="sw-top"><span class="chip" data-icon="dust"></span><span class="hex">#E9D8A6</span></div><div class="sw-bar"></div>
@@ -330,11 +330,11 @@ pre.code code{background:none;padding:0;white-space:pre;font-size:inherit}
 
       <section id="overview">
         <h2><span class="idx">02</span>Огляд головного екрана</h2>
-        <p>За <code>mobile/README.md</code> і <code>docs/DEMO_SCENARIO.md</code> головний екран — це мета. Після входу гравець бачить героїв поточного патча, згрупованих за тірами від S до C, з вінрейтом, пікрейтом і короткою підказкою від Claude. Дотик по герою відкриває картку з AI-білдом.</p>
+        <p>За <code>mobile/README.md</code> і <code>docs/DEMO_SCENARIO.md</code> головний екран — це мета. Після входу гравець бачить героїв поточного патча, згрупованих за тірами від S до C, з вінрейтом, пікрейтом і короткою підказкою від Gemini. Дотик по герою відкриває картку з AI-білдом.</p>
         <ul class="dec">
           <li><strong>Тір — головна група, вінрейт — головне число.</strong> У тірі герої йдуть за вінрейтом від більшого до меншого. Вінрейт стоїть праворуч великим моноширинним шрифтом, тож його видно краєм ока під час драфту.</li>
           <li><strong>Колір вінрейту має лише два сигнали.</strong> Від 52 % він танго, до 48 % — фласка, усе між ними нейтральне. Так зелений не займає пів екрана й лишається помітним.</li>
-          <li><strong>Текст від AI завжди «смоковий».</strong> Фіолетова іскра і ледь фіолетовий текст показують, що <code>ai_summary</code> згенерував Claude, а не бере статистика.</li>
+          <li><strong>Текст від AI завжди «смоковий».</strong> Фіолетова іскра і ледь фіолетовий текст показують, що <code>ai_summary</code> згенерував Gemini, а не бере статистика.</li>
           <li><strong>Без нижньої навігації.</strong> Головний екран один, вхід і картка героя відкриваються поверх. Профіль і вихід ховаються під аватаром у шапці.</li>
           <li><strong>Заглушка аватара (BUG-02).</strong> Поки картинка вантажиться або коли вона не завантажилась, на її місці монограма на кольорі атрибута.</li>
           <li><strong>Офлайн-демо.</strong> Останню мету кешує Hive, тож у режимі польоту екран показує її з банером замість помилки.</li>
@@ -412,7 +412,7 @@ pre.code code{background:none;padding:0;white-space:pre;font-size:inherit}
             <tr><td><code>TierBadge</code></td><td><code>tier</code></td><td>32 × 32, радіус 9, заливка <code>tierS…tierC</code>, літера кольору ink.</td></tr>
             <tr><td><code>MetaHeroRow</code></td><td><code>hero, onTap</code></td><td>Весь рядок — одна зона натискання (<code>InkWell</code>).</td></tr>
             <tr><td><code>HeroAvatar</code></td><td><code>url, name, primaryAttr</code></td><td><code>Image.network</code> з <code>loadingBuilder</code> і <code>errorBuilder</code>, які показують монограму (BUG-02).</td></tr>
-            <tr><td><code>AiText</code></td><td><code>text, maxLines</code></td><td>Іскра кольору смоку + текст. Усюди, де показується вивід Claude.</td></tr>
+            <tr><td><code>AiText</code></td><td><code>text, maxLines</code></td><td>Іскра кольору смоку + текст. Усюди, де показується вивід Gemini.</td></tr>
             <tr><td><code>WinRate</code></td><td><code>winRate, pickRate</code></td><td>Колір: від 52 — <code>success</code>, до 48 — <code>danger</code>, інакше <code>onSurface</code>.</td></tr>
             <tr><td><code>MetaErrorState</code></td><td><code>onRetry</code></td><td>Іконка кольору фласки, кнопка кольору манго.</td></tr>
             <tr><td><code>AppSkeleton</code></td><td><code>width, height, radius</code></td><td>Відблиск кольору дасту, 1400 ms.</td></tr>

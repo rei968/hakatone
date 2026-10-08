@@ -41,7 +41,7 @@ class MetaHero {
   final String? avatarUrl;
   final Tier tier;
 
-  /// Коротка підказка від Claude. Немає — рядок рендериться без неї.
+  /// Коротка підказка від AI (Gemini). Немає — рядок рендериться без неї.
   final String? aiSummary;
 
   Map<String, dynamic> toJson() => {

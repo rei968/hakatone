@@ -26,7 +26,7 @@ void main() {
 
     await tester.tap(find.text('Pudge'));
     await tester.pumpAndSettle();
-    expect(find.text('AI-білд від Claude'), findsOneWidget);
+    expect(find.text('AI-білд від Gemini'), findsOneWidget);
     expect(find.text('Порядок прокачки'), findsOneWidget);
 
     await tester.pageBack();
@@ -53,7 +53,7 @@ void main() {
       await tester.scrollUntilVisible(find.text(name), 200);
       await tester.tap(find.text(name));
       await tester.pumpAndSettle();
-      expect(find.text('AI-білд від Claude'), findsOneWidget);
+      expect(find.text('AI-білд від Gemini'), findsOneWidget);
 
       await tester.scrollUntilVisible(find.text('Історія'), 300);
       expect(find.text('Характеристики'), findsOneWidget);

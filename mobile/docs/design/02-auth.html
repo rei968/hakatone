@@ -449,7 +449,7 @@ POST /api/auth/register     те саме тіло
         '<button type="submit" class="primary" data-mk="6"'+dis+'><span class="mk" aria-hidden="true">6</span>'+(S.loading?'<span class="spin" aria-hidden="true"></span>'+(reg?'Створюємо акаунт…':'Входимо…'):(reg?'Створити акаунт':'Увійти'))+'</button>'+
         '<div class="switch" data-mk="7"><span class="mk" aria-hidden="true">7</span>'+(reg?'Вже маєте акаунт?<button type="button" data-act="mode">Увійти</button>':'Немає акаунта?<button type="button" data-act="mode">Зареєструватися</button>')+'</div>'+
       '</form>'+
-      '<p class="fine">Мету рахує OpenDota, білди пише Claude.</p>'+
+      '<p class="fine">Мету рахує OpenDota, білди пише Gemini.</p>'+
     '</div>';
     if(focusId){var el=document.getElementById(focusId); if(el){el.focus(); if(el.setSelectionRange&&el.type!=='email'){var l=el.value.length; try{el.setSelectionRange(l,l);}catch(e){}}}}
     syncCtl();

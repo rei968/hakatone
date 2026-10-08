@@ -247,7 +247,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       const Spacer(),
                       SizedBox(height: m.space6),
                       Text(
-                        'Мету рахує OpenDota, білди пише Claude.',
+                        'Мету рахує OpenDota, білди пише Gemini.',
                         textAlign: TextAlign.center,
                         style: text.bodySmall?.copyWith(color: colors.textSubtle),
                       ),

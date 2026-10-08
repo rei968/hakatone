@@ -1,17 +1,17 @@
-# Backend Service - GameGuide API
+# Backend Service - Kakatone Dota Guide API
 
-Цей модуль відповідає за надання REST API для мобільного клієнту та роботу з базою даних.
+Серверна частина на **Dart (shelf)**: робота з OpenDota API, інтеграція з Claude AI та базою даних.
 
 ## 📁 Структура
 ```text
 backend/
 ├── database/
-│   ├── schema.sql         # SQL створення таблиць
-│   └── seeds/             # Готові початкові дані (dota2.json, meta.json, cs2.json)
+│   ├── schema.sql         # SQL створення таблиць (PostgreSQL / SQLite)
+│   └── seeds/             # Готові початкові дані (dota2.json, meta.json fallback)
 └── bin/ (або src/)        # Сервер API на Dart (shelf)
 ```
 
 ## 🚀 Швидкий старт
 1. Ознайомтеся зі схемою БД: `../docs/DATABASE_ERD.md`
 2. Перегляньте контракт ендпоінтів: `../docs/openapi.yaml`
-3. Використовуйте готові сіди в `database/seeds/` для наповнення бази даних тестовими даними.
+3. Використовуйте `database/seeds/dota2.json` та `meta.json` як базовий fallback-знімок при помилках OpenDota.

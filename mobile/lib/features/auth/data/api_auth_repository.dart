@@ -29,14 +29,17 @@ class ApiAuthRepository implements AuthRepository {
     }
   }
 
-  /// За контрактом 400 реєстрації — «невалідні дані або email зайнятий».
-  /// Дані ми вже перевірили до надсилання, тож 400 без коду вважаємо
-  /// зайнятим email. Код `invalid_data` у тілі розрізняє ці випадки.
+  /// Коди з тіла відповіді бекенду (`{"error": "..."}`, docs/openapi.yaml).
   static AuthFailure _failure(ApiException e, {required bool isRegistration}) => switch (e.failure) {
         ApiFailure.network => AuthFailure.network,
         ApiFailure.unauthorized => AuthFailure.invalidCredentials,
-        ApiFailure.badRequest when isRegistration && e.code != 'invalid_data' => AuthFailure.emailTaken,
-        ApiFailure.badRequest => AuthFailure.invalidData,
+        ApiFailure.badRequest => switch (e.code) {
+            'email_taken' => AuthFailure.emailTaken,
+            'invalid_email' => AuthFailure.invalidEmail,
+            'password_too_short' => AuthFailure.passwordTooShort,
+            'password_too_long' => AuthFailure.passwordTooLong,
+            _ => AuthFailure.invalidData,
+          },
         ApiFailure.notFound || ApiFailure.server => AuthFailure.server,
       };
 }

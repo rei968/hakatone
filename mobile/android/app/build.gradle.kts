@@ -1,3 +1,10 @@
+import groovy.json.JsonSlurper
+
+// Єдине джерело назви, applicationId і адреси API — mobile/config/app.json
+// (його ж читає Dart через --dart-define-from-file).
+@Suppress("UNCHECKED_CAST")
+val appConfig = JsonSlurper().parse(rootProject.file("../config/app.json")) as Map<String, String>
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -5,7 +12,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.dota_builds"
+    namespace = "com.kakatone.mangodota"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,8 +22,11 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.dota_builds"
+        applicationId = appConfig.getValue("APPLICATION_ID")
+        manifestPlaceholders["appName"] = appConfig.getValue("APP_NAME")
+        // http-бекенд (локальний сервер) потребує cleartext, https (Render) — ні.
+        manifestPlaceholders["usesCleartextTraffic"] =
+            appConfig.getValue("API_BASE_URL").startsWith("http://").toString()
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -31,8 +41,7 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Для хакатону APK підписується debug-ключем. Власний ключ — див. mobile/docs/BUILD.md.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

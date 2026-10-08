@@ -15,14 +15,15 @@ class MangoLogo extends StatelessWidget {
     return ExcludeSemantics(
       child: CustomPaint(
         size: Size.square(size),
-        painter: _MangoPainter(fruit: colors.mango, leaf: colors.tango),
+        painter: MangoPainter(fruit: colors.mango, leaf: colors.tango),
       ),
     );
   }
 }
 
-class _MangoPainter extends CustomPainter {
-  const _MangoPainter({required this.fruit, required this.leaf});
+/// Малює манго в сітці 24 × 24. Ним же генеруються іконки (tool/generate_icons.dart).
+class MangoPainter extends CustomPainter {
+  const MangoPainter({required this.fruit, required this.leaf});
 
   final Color fruit;
   final Color leaf;
@@ -58,7 +59,7 @@ class _MangoPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_MangoPainter old) => old.fruit != fruit || old.leaf != leaf;
+  bool shouldRepaint(MangoPainter old) => old.fruit != fruit || old.leaf != leaf;
 }
 
 /// Плитка з логотипом, як у шапці: 40 dp, фон манго 14 %.

@@ -128,49 +128,76 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
     );
   }
 
+  /// Ліниві слайвери: героїв 127, тож рядки й аватари будуються лише
+  /// тоді, коли докручуються до екрана.
   Widget _content(MetaFeed feed) {
     final m = context.metrics;
+    final colors = context.colors;
     final report = feed.report;
-    final groups = report.byTier;
     final saved = Fmt.dateTime(feed.savedAt);
-    return ListView(
+    return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.only(bottom: m.space8),
-      children: [
+      slivers: [
         if (feed.error != null)
-          Padding(
+          SliverPadding(
             padding: EdgeInsets.fromLTRB(m.space4, m.space1, m.space4, 0),
-            child: feed.offline
-                ? StatusBanner(
-                    icon: Icons.wifi_off_rounded,
-                    iconColor: context.colors.clarity,
-                    message: 'Немає інтернету. Показуємо мету, збережену на пристрої $saved.',
-                  )
-                : StatusBanner(
-                    icon: Icons.error_outline_rounded,
-                    iconColor: context.colors.salve,
-                    message: 'Не вдалося оновити мету: ${loadErrorMessage(feed.error!).toLowerCase()} '
-                        'Показуємо дані від $saved.',
-                  ),
+            sliver: SliverToBoxAdapter(
+              child: feed.offline
+                  ? StatusBanner(
+                      icon: Icons.wifi_off_rounded,
+                      iconColor: colors.clarity,
+                      message: 'Немає інтернету. Показуємо мету, збережену на пристрої $saved.',
+                    )
+                  : StatusBanner(
+                      icon: Icons.error_outline_rounded,
+                      iconColor: colors.salve,
+                      message: 'Не вдалося оновити мету: ${loadErrorMessage(feed.error!).toLowerCase()} '
+                          'Показуємо дані від $saved.',
+                    ),
+            ),
           ),
-        Padding(
+        SliverPadding(
           padding: EdgeInsets.fromLTRB(m.space4, m.space4, m.space4, 0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(child: Text('Мета героїв', style: context.text.headlineSmall)),
-              Text(
-                Fmt.heroes(report.heroes.length),
-                style: context.text.bodySmall?.copyWith(color: context.colors.textMuted),
-              ),
-            ],
+          sliver: SliverToBoxAdapter(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Expanded(child: Text('Мета героїв', style: context.text.headlineSmall)),
+                Text(Fmt.heroes(report.heroes.length), style: context.text.bodySmall?.copyWith(color: colors.textMuted)),
+              ],
+            ),
           ),
         ),
-        for (final (tier, heroes) in groups) ...[
-          SizedBox(height: m.space6),
-          TierSection(tier: tier, heroes: heroes, flash: _justSynced),
+        for (final (tier, heroes) in report.byTier) ...[
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(m.space4, m.space6, m.space4, 10),
+            sliver: SliverToBoxAdapter(child: TierHeader(tier: tier, count: heroes.length)),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: m.space4),
+            sliver: DecoratedSliver(
+              decoration: BoxDecoration(
+                color: colors.surface1,
+                border: Border.all(color: colors.border),
+                borderRadius: BorderRadius.circular(m.radiusXl),
+              ),
+              sliver: SliverList.builder(
+                itemCount: heroes.length,
+                itemBuilder: (context, i) => Material(
+                  type: MaterialType.transparency,
+                  child: Column(
+                    children: [
+                      if (i > 0) const Divider(indent: 72),
+                      MetaHeroRow(hero: heroes[i], flash: _justSynced),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
+        SliverToBoxAdapter(child: SizedBox(height: m.space8)),
       ],
     );
   }
@@ -222,7 +249,17 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
       label: 'Завантаження мети',
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: [section(), section()],
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(m.space4, m.space3, m.space4, 0),
+            child: const SlowHint(
+              after: Duration(seconds: 6),
+              text: 'Сервер прокидається після сну. Перший запит може тривати до хвилини.',
+            ),
+          ),
+          section(),
+          section(),
+        ],
       ),
     );
   }

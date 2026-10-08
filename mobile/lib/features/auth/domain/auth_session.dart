@@ -36,10 +36,19 @@ enum AuthFailure {
   /// 401 на вході.
   invalidCredentials,
 
-  /// 400 на реєстрації, коли email уже зайнятий.
+  /// 400 `email_taken`.
   emailTaken,
 
-  /// Інший 400.
+  /// 400 `invalid_email`.
+  invalidEmail,
+
+  /// 400 `password_too_short` (менше 6).
+  passwordTooShort,
+
+  /// 400 `password_too_long` (понад 128).
+  passwordTooLong,
+
+  /// Інший 400 (`invalid_body`).
   invalidData,
 
   /// Немає мережі або таймаут.

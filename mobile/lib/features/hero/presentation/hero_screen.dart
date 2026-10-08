@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/format/formatters.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/widgets/ai_text.dart';
 import '../../../core/widgets/app_skeleton.dart';
@@ -28,7 +29,11 @@ class HeroScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(),
       body: card.when(
-        data: (c) => _HeroBody(details: c.details, cachedAt: c.fromCache ? c.savedAt : null, staleError: c.staleError),
+        // Потягнути вниз — запитати картку ще раз (наприклад, якщо AI-білд ще не був готовий).
+        data: (c) => RefreshIndicator(
+          onRefresh: () => ref.refresh(heroCardProvider(heroId).future),
+          child: _HeroBody(details: c.details, cachedAt: c.fromCache ? c.savedAt : null, staleError: c.staleError),
+        ),
         loading: () => const _HeroSkeleton(),
         error: (error, _) => ListView(
           padding: EdgeInsets.all(m.space4),
@@ -67,6 +72,7 @@ class _HeroBody extends StatelessWidget {
     final offline = staleError is ApiException && (staleError! as ApiException).failure == ApiFailure.network;
 
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(m.space4, 0, m.space4, m.space8),
       children: [
         if (cachedAt != null) ...[
@@ -112,10 +118,16 @@ class _HeroBody extends StatelessWidget {
             child: AiText(summary),
           ),
         ],
-        if (aiBuild != null) ...[
-          SizedBox(height: m.space6),
-          _AiBuildCard(aiBuild: aiBuild),
-        ],
+        SizedBox(height: m.space6),
+        if (aiBuild != null)
+          _AiBuildCard(aiBuild: aiBuild)
+        else
+          // `ai_build: null` — AI не встиг або впав. Це не помилка: потягніть вниз пізніше.
+          StatusBanner(
+            icon: Icons.auto_awesome,
+            iconColor: context.colors.smoke,
+            message: 'AI-білд для цього героя поки недоступний. Потягніть екран вниз, щоб спробувати ще раз.',
+          ),
         if (details.abilities.isNotEmpty) ...[
           SizedBox(height: m.space6),
           const _SectionTitle('Здібності'),
@@ -146,7 +158,7 @@ class _HeroBody extends StatelessWidget {
 }
 
 TextStyle _bigNumber(BuildContext context) =>
-    context.text.labelSmall!.copyWith(fontSize: 22, height: 28 / 22, fontWeight: FontWeight.w600);
+    context.text.labelSmall!.copyWith(fontSize: 22, height: 28 / 22, fontWeight: FontWeight.w600, fontVariations: wght(FontWeight.w600));
 
 class _Header extends StatelessWidget {
   const _Header({required this.details});
@@ -369,7 +381,7 @@ class _AiBuildCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         aiBuild.coreItems[i],
-                        style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                        style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w600, fontVariations: wght(FontWeight.w600)),
                       ),
                     ),
                   ],
@@ -413,10 +425,10 @@ class _AbilityRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(ability.name, style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                Text(ability.name, style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w600, fontVariations: wght(FontWeight.w600))),
                 if (costs.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(costs, style: context.text.labelSmall?.copyWith(fontWeight: FontWeight.w500, color: colors.textMuted)),
+                  Text(costs, style: context.text.labelSmall?.copyWith(fontWeight: FontWeight.w500, fontVariations: wght(FontWeight.w500), color: colors.textMuted)),
                 ],
                 if (ability.description.isNotEmpty) ...[
                   SizedBox(height: m.space1),
@@ -596,6 +608,11 @@ class _HeroSkeleton extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.fromLTRB(m.space4, 0, m.space4, m.space8),
         children: [
+          const SlowHint(
+            after: Duration(seconds: 2),
+            text: 'Gemini складає білд для цього героя. Перший раз це до 10 секунд, далі миттєво.',
+          ),
+          SizedBox(height: m.space3),
           Row(
             children: [
               AppSkeleton(width: 72, height: 72, radius: m.radiusMd * 1.5),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/format/formatters.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
 import '../../../../core/widgets/ai_text.dart';
 import '../../domain/meta_report.dart';
@@ -39,7 +40,7 @@ class TierBadge extends StatelessWidget {
       child: Text(
         tier.letter,
         style: context.text.titleSmall?.copyWith(
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w700, fontVariations: wght(FontWeight.w700),
           color: tier == Tier.none ? Theme.of(context).colorScheme.onSurface : colors.ink,
         ),
       ),
@@ -75,62 +76,39 @@ class WinRate extends StatelessWidget {
         if (showPickRate)
           Text(
             'пік ${Fmt.percent(pickRate)}',
-            style: label.copyWith(fontWeight: FontWeight.w500, height: 14 / 11, color: colors.textMuted),
+            style: label.copyWith(fontWeight: FontWeight.w500, fontVariations: wght(FontWeight.w500), height: 14 / 11, color: colors.textMuted),
           ),
       ],
     );
   }
 }
 
-/// Секція тіру: заголовок і картка з рядками героїв.
-class TierSection extends StatelessWidget {
-  const TierSection({super.key, required this.tier, required this.heroes, this.flash = false});
+/// Заголовок секції тіру: бейдж, назва, опис і кількість героїв.
+class TierHeader extends StatelessWidget {
+  const TierHeader({super.key, required this.tier, required this.count});
 
   final Tier tier;
-  final List<MetaHero> heroes;
-
-  /// Один спалах дасту після оновлення.
-  final bool flash;
+  final int count;
 
   @override
   Widget build(BuildContext context) {
-    final m = context.metrics;
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: m.space4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Semantics(
+      header: true,
+      label: '${tier.title}, ${tier.description.toLowerCase()}, ${Fmt.heroes(count)}',
+      excludeSemantics: true,
+      child: Row(
         children: [
-          Semantics(
-            header: true,
-            label: '${tier.title}, ${tier.description.toLowerCase()}, ${Fmt.heroes(heroes.length)}',
-            excludeSemantics: true,
-            child: Row(
-              children: [
-                TierBadge(tier: tier),
-                SizedBox(width: m.space3),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(tier.title, style: context.text.titleMedium),
-                      Text(
-                        '${tier.description} · ${Fmt.heroes(heroes.length)}',
-                        style: context.text.bodySmall?.copyWith(color: context.colors.textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Card(
+          TierBadge(tier: tier),
+          SizedBox(width: context.metrics.space3),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (var i = 0; i < heroes.length; i++) ...[
-                  if (i > 0) const Divider(indent: 72),
-                  MetaHeroRow(hero: heroes[i], flash: flash),
-                ],
+                Text(tier.title, style: context.text.titleMedium),
+                Text(
+                  '${tier.description} · ${Fmt.heroes(count)}',
+                  style: context.text.bodySmall?.copyWith(color: context.colors.textMuted),
+                ),
               ],
             ),
           ),
@@ -177,7 +155,7 @@ class MetaHeroRow extends StatelessWidget {
                         hero.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                        style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w600, fontVariations: wght(FontWeight.w600)),
                       ),
                       const SizedBox(height: 2),
                       Row(

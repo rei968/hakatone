@@ -173,7 +173,7 @@ abstract final class AppTheme {
           borderSide: const BorderSide(color: AppPalette.salve, width: 1.5),
         ),
         disabledBorder: OutlineInputBorder(borderRadius: radiusLg, borderSide: borderSide),
-        errorStyle: textTheme.bodySmall!.copyWith(color: AppPalette.salve, fontWeight: FontWeight.w500),
+        errorStyle: textTheme.bodySmall!.copyWith(color: AppPalette.salve, fontWeight: FontWeight.w500, fontVariations: wght(FontWeight.w500)),
         helperStyle: textTheme.bodySmall!.copyWith(color: AppPalette.textMuted),
         errorMaxLines: 2,
         suffixIconColor: AppPalette.textMuted,
@@ -184,7 +184,7 @@ abstract final class AppTheme {
         backgroundColor: AppPalette.text,
         contentTextStyle: textTheme.bodyLarge!.copyWith(
           color: AppPalette.bg,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w500, fontVariations: wght(FontWeight.w500),
         ),
         actionTextColor: AppPalette.bg,
         shape: RoundedRectangleBorder(borderRadius: radiusLg),

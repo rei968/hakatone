@@ -58,7 +58,10 @@
 - [x] Bearer-токен лише для захищених запитів (`/admin/sync`), 401 на них закриває сесію
 - [x] INTERNET у маніфесті Android, http до локального бекенду лише в debug
 - [x] Перевірено з бекендом із `feature/backend-skeleton`: мета, картка, 404 — 38/38 тестів
-- [ ] Бекенд: `/api/auth/login` і `/register` ще повертають 404; у CORS додати `Authorization`
+- [x] Підключено задеплоєний бекенд `https://hakatone.onrender.com`: справжній вхід і реєстрація, коди помилок (`email_taken`, `invalid_email`, `password_too_short`, `password_too_long`), пароль 6–128
+- [x] Таймаути під Render (прокидається до хвилини) і перший AI-білд (до 10 с), підказки «Сервер прокидається» і «Gemini складає білд»
+- [x] `ai_build: null` — не помилка: підказка й повтор через pull-to-refresh; 127 героїв у лінивому списку
+- [ ] Перевірити справжню реєстрацію й вхід на Render з телефона (я не створюю акаунтів на зовнішніх сервісах)
 
 ## 8. Кеш у Hive, стани завантаження/помилки
 - [x] `hive_ce`: окремі бокси `session` і `api_cache`, пошкоджений запис = відсутній
@@ -74,15 +77,19 @@
 - [x] Повернення в застосунок оновлює мету: на демо після `/admin/sync` видно «щойно оновлено»
 
 ## 10. Збірка APK
-- [ ] applicationId, підпис, іконка-манго, вбудовані шрифти
-- [ ] `flutter build apk --release`
+- [x] `applicationId` `com.kakatone.mangodota` і назва — з `config/app.json` через Gradle, пакет коду перенесено
+- [x] Шрифти вбудовано (`assets/fonts`, OFL), `google_fonts` прибрано — без інтернету вигляд той самий
+- [x] Іконка-манго для Android і web, згенерована з логотипа (`tool/generate_icons.dart`)
+- [x] Темний екран старту замість білого (і Android 12+ splash)
+- [x] http дозволяється лише для `http://` адреси API; APK підписується debug-ключем
+- [x] Інструкція збірки — [docs/BUILD.md](docs/BUILD.md)
+- [~] `flutter build apk --release` — на цій машині немає Android SDK, збирає інша людина за BUILD.md
 
 ## Git
 - [x] remote `origin`, гілка `feature/main-menu` від `origin/develop`, проєкт у `mobile/`
 - [ ] README: як поєднати `mobile/README.md` з інструкціями запуску
-- [x] Коміт і пуш `feature/main-menu` (пункти 1–6), без PR у `develop`
+- [x] Коміти й пуші `feature/main-menu` після кожного пункту, без PR у `develop`
 
 ## Відкриті питання
 1. Аватари офлайн: потрібен `cached_network_image`?
-2. Пароль: мінімальна довжина й окремий код помилки для «email зайнятий».
-3. Бекенд: `/api/auth/login` і `/register` ще не реалізовані; у CORS додати `Authorization`.
+2. Відкрити PR `feature/main-menu` → `develop`, коли команда буде готова.

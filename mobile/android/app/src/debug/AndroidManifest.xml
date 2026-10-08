@@ -4,7 +4,4 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Локальний бекенд працює по http (емулятор: http://10.0.2.2:8080).
-         Лише для debug; для release див. TODO.md, пункт 10. -->
-    <application android:usesCleartextTraffic="true"/>
 </manifest>

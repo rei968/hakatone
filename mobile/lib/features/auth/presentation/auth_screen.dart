@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/widgets/brand.dart';
 import '../application/auth_controller.dart';
@@ -278,7 +279,7 @@ class _Field extends StatelessWidget {
         Text(
           label,
           style: context.text.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w600, fontVariations: wght(FontWeight.w600),
             color: context.colors.textMuted,
           ),
         ),
@@ -299,6 +300,9 @@ class _ErrorBanner extends StatelessWidget {
         AuthFailure.invalidCredentials =>
           'Невірний email або пароль. Перевірте, чи увімкнена англійська розкладка.',
         AuthFailure.emailTaken => 'Акаунт з цим email уже існує.',
+        AuthFailure.invalidEmail => 'Сервер не прийняв цей email. Перевірте, чи немає в ньому помилки.',
+        AuthFailure.passwordTooShort => 'Пароль закороткий: потрібно щонайменше 6 символів.',
+        AuthFailure.passwordTooLong => 'Пароль задовгий: не більше 128 символів.',
         AuthFailure.invalidData => 'Сервер не прийняв ці дані. Перевірте email і пароль.',
         AuthFailure.network => 'Немає з’єднання з сервером. Перевірте інтернет і спробуйте ще раз.',
         AuthFailure.server => 'Сервер не відповідає. Спробуйте ще раз за хвилину.',

@@ -1,11 +1,11 @@
 {
-    "name": "dota_builds",
-    "short_name": "dota_builds",
+    "name": "MangoDota",
+    "short_name": "MangoDota",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#10141B",
+    "theme_color": "#10141B",
+    "description": "MangoDota — мета Dota 2 і AI-білди від Gemini.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

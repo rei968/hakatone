@@ -106,20 +106,23 @@ void main() {
       expect(await failureOf(repo.login(email: 'player@example.com', password: 'nope')), AuthFailure.invalidCredentials);
     });
 
-    test('реєстрація: 201 → сесія, 400 → email зайнятий, 400 invalid_data → невалідні дані', () async {
+    test('реєстрація: 201 → сесія, коди 400 з бекенду → окремі помилки', () async {
       var reply = (201, ok as Object?);
       final repo = ApiAuthRepository(dioWith(FakeAdapter((_) => reply)));
 
       expect((await repo.register(email: 'new@example.com', password: 'secret123')).user.id, 'usr_1');
 
-      reply = (400, {'error': 'email_taken'});
-      expect(await failureOf(repo.register(email: 'a@b.co', password: 'secret123')), AuthFailure.emailTaken);
-
-      reply = (400, null);
-      expect(await failureOf(repo.register(email: 'a@b.co', password: 'secret123')), AuthFailure.emailTaken);
-
-      reply = (400, {'error': 'invalid_data'});
-      expect(await failureOf(repo.register(email: 'a@b.co', password: 'secret123')), AuthFailure.invalidData);
+      const codes = {
+        'email_taken': AuthFailure.emailTaken,
+        'invalid_email': AuthFailure.invalidEmail,
+        'password_too_short': AuthFailure.passwordTooShort,
+        'password_too_long': AuthFailure.passwordTooLong,
+        'invalid_body': AuthFailure.invalidData,
+      };
+      for (final MapEntry(key: code, value: failure) in codes.entries) {
+        reply = (400, {'error': code});
+        expect(await failureOf(repo.register(email: 'a@b.co', password: 'secret123')), failure, reason: code);
+      }
     });
 
     test('немає мережі → network, 5xx → server', () async {

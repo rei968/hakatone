@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+/// Вісь товщини для змінних шрифтів. Самого `fontWeight` для них замало:
+/// товщину задає варіація `wght`, тож ставимо обидва.
+List<FontVariation> wght(FontWeight weight) => [FontVariation('wght', weight.value.toDouble())];
 
 /// Шрифтові ролі [TextTheme] (специфікація, «Типографіка → TextTheme»).
 ///
+/// Шрифти вбудовані (`assets/fonts`, змінні TTF з Google Fonts), тож
+/// застосунок виглядає однаково й без інтернету.
 /// Кольори тут не задаються: їх проставляє [AppTheme] через `TextTheme.apply`,
 /// а текст другого плану фарбується на місці через `context.colors.textMuted`.
 abstract final class AppTypography {
@@ -34,19 +39,14 @@ abstract final class AppTypography {
     FontWeight weight, {
     double tracking = 0,
   }) {
-    final style = TextStyle(
+    return TextStyle(
+      fontFamily: family,
       fontSize: size,
       height: lineHeight / size,
       fontWeight: weight,
+      fontVariations: wght(weight),
       letterSpacing: size * tracking,
       fontFeatures: family == mono ? const [FontFeature.tabularFigures()] : null,
     );
-    try {
-      return GoogleFonts.getFont(family, textStyle: style);
-    } on Exception {
-      // Шрифту немає в цій версії google_fonts — лишаємо системний,
-      // щоб застосунок запустився. Перед APK шрифти вбудовуються (див. TODO.md, «Перед збіркою APK»).
-      return style;
-    }
   }
 }

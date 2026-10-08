@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../network/api_client.dart';
@@ -8,6 +10,52 @@ String loadErrorMessage(Object error) => switch (error) {
       ApiException(failure: ApiFailure.server) => 'Сервер не відповідає. Спробуйте ще раз за хвилину.',
       _ => 'Перевірте інтернет і спробуйте ще раз.',
     };
+
+/// Пояснення, яке з’являється, лише якщо очікування затяглося:
+/// на швидкій мережі його ніхто не бачить.
+class SlowHint extends StatefulWidget {
+  const SlowHint({super.key, required this.after, required this.text});
+
+  final Duration after;
+  final String text;
+
+  @override
+  State<SlowHint> createState() => _SlowHintState();
+}
+
+class _SlowHintState extends State<SlowHint> {
+  late final Timer _timer;
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(widget.after, () {
+      if (mounted) setState(() => _visible = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: _visible ? 1 : 0,
+      duration: context.metrics.motionBase,
+      child: Semantics(
+        liveRegion: _visible,
+        child: Text(
+          widget.text,
+          style: context.text.bodySmall?.copyWith(color: context.colors.textMuted),
+        ),
+      ),
+    );
+  }
+}
 
 /// Банер над контентом: офлайн (кларетка) або невдале оновлення (фласка).
 class StatusBanner extends StatelessWidget {

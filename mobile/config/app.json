@@ -1,7 +1,7 @@
 {
   "APP_NAME": "MangoDota",
-  "APPLICATION_ID": "com.example.dota_builds",
-  "API_BASE_URL": "http://10.0.2.2:8080",
-  "USE_MOCKS": "true",
-  "MOCK_AUTH": "true"
+  "APPLICATION_ID": "com.kakatone.mangodota",
+  "API_BASE_URL": "https://hakatone.onrender.com",
+  "USE_MOCKS": "false",
+  "MOCK_AUTH": "false"
 }

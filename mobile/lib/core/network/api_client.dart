@@ -15,13 +15,14 @@ Options authorized([Options? options]) =>
 const _authKey = 'auth';
 
 final dioProvider = Provider<Dio>((ref) {
-  const timeout = Duration(seconds: 10);
   final dio = Dio(
     BaseOptions(
       baseUrl: AppConfig.apiBaseUrl,
-      connectTimeout: timeout,
-      sendTimeout: timeout,
-      receiveTimeout: timeout,
+      // Бекенд на Render засинає після ~15 хв і прокидається до хвилини,
+      // а перший AI-білд героя Gemini складає до ~10 с.
+      connectTimeout: const Duration(seconds: 30),
+      sendTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 60),
       headers: {'Accept': 'application/json'},
     ),
   );

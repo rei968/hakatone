@@ -2,7 +2,8 @@
     <!-- Мета й герої приходять з бекенду команди (docs/openapi.yaml). -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="dota_builds"
+        android:label="${appName}"
+        android:usesCleartextTraffic="${usesCleartextTraffic}"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

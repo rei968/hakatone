@@ -1,8 +1,9 @@
 /// Перевірки полів форми входу (docs/design/02-auth.html, «Валідація і тексти помилок»).
 /// Повертають текст помилки або `null`, якщо все гаразд.
 abstract final class AuthValidators {
-  /// У контракті довжини немає, беремо 6 як у прикладі `secret123` (відкрите питання до бекенду).
+  /// Межі пароля, як на бекенді (`password_too_short` / `password_too_long`).
   static const minPasswordLength = 6;
+  static const maxPasswordLength = 128;
 
   static final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
@@ -18,6 +19,9 @@ abstract final class AuthValidators {
     if (value.isEmpty) return 'Введіть пароль.';
     if (forRegistration && value.length < minPasswordLength) {
       return 'Пароль має містити щонайменше $minPasswordLength символів.';
+    }
+    if (forRegistration && value.length > maxPasswordLength) {
+      return 'Пароль має бути не довшим за $maxPasswordLength символів.';
     }
     return null;
   }

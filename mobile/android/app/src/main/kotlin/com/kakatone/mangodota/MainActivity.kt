@@ -1,4 +1,4 @@
-package com.example.dota_builds
+package com.kakatone.mangodota
 
 import io.flutter.embedding.android.FlutterActivity
 

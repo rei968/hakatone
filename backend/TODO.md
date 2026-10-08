@@ -17,36 +17,38 @@
 - [x] Колонка `heroes.attack_type` у `schema.sql` (YY, глянь у PR #3)
 - `patch` поки береться з `meta.json`, детект патча в останню чергу
 
-## 3. Реалізація OpenDotaAPI
+## 3. Реалізація OpenDotaAPI (на перевірці)
 - [x] Клієнт `GET /heroStats`: 127 героїв
 - [x] Win rate, pick rate, тір (S/A/B/C) рахуються кодом, стати 1-го рівня
 - [x] Upsert не стирає `bio`, `ai_summary`, abilities і AI-білди
-- [~] Коміти в `feature/opendota-sync`, ще не запушено
+- [x] [PR #4](https://github.com/rei968/hakatone/pull/4) у `develop`, чекає рев'ю ЖЕ (мерджити після #3)
 
-## 4. Воркер: Timer.periodic + запит до OpenDota
+## 4. Воркер: Timer.periodic + запит до OpenDota (на перевірці)
 - [x] Sync при старті у фоні, далі кожні `SYNC_INTERVAL_HOURS` (6 год)
 - [x] Якщо OpenDota недоступний, дані в БД лишаються як були
-- [~] Push і PR разом з розділом 3
+- [x] У [PR #4](https://github.com/rei968/hakatone/pull/4)
 
-## 5. POST /admin/sync (ручний запуск для демо)
+## 5. POST /admin/sync (ручний запуск для демо) (на перевірці)
 - [x] Відповідь `{status, synced_at, heroes_updated}`, 502 при помилці
 - [x] Паралельні виклики чекають один і той самий запуск
 - Захист токеном зробимо разом з авторизацією
 
-## 6. Реалізація AI-аналізу (Gemini замість Claude API)
+## 6. Реалізація AI-аналізу (Gemini замість Claude API) (на перевірці)
 - [x] `gemini-3.5-flash-lite` через Google AI Studio, ключ у `GEMINI_API_KEY`
 - [x] Білд генерується при першому запиті героя і кешується в `ai_builds`
 - [x] Демо-герої 14, 8, 74 отримують свіжий білд під час sync
 - [x] Без ключа або при помилці AI героя віддаємо без білда, а не 500
 - [x] Закомічено в `feature/opendota-sync`
-- [ ] Push і PR у `develop`
+- [x] У [PR #4](https://github.com/rei968/hakatone/pull/4)
 - [ ] Попередити ЖЕ: в `openapi.yaml` і презентації досі згадується Claude API
 
 ## 7. Деплой на Render/Railway
 - [x] Dockerfile: `database/` у образі, `WORKDIR /app`; бандл `dart build cli` перевірено локально
-- [ ] Push гілки, щоб Render міг її зібрати
-- [ ] Web Service на Render: Root Directory `backend`, runtime Docker, env `GEMINI_API_KEY`
-- [ ] Публічний URL бекенду для TY
+- [x] Гілку `feature/opendota-sync` запушено, Render може її зібрати
+- [x] Web Service на Render: Root Directory `backend`, runtime Docker, env `GEMINI_API_KEY`
+- [x] Публічний URL: [hakatone.onrender.com](https://hakatone.onrender.com/api/health), усі ендпоінти перевірено
+- [ ] Передати URL TY
+- [ ] Після мерджу #3 і #4 перемкнути Render з `feature/opendota-sync` на `develop` або `main`
 - SQLite на Render живе до рестарту, для демо це прийнятно
 - Безкоштовний інстанс засинає без запитів, перед демо його треба «розбудити»
 
@@ -58,6 +60,5 @@
 - [ ] Детект патча замість `patch` з `meta.json`
 
 ## Питання
-1. Видаляємо `lib/db.dart`, `bin/backend.dart` і `bin/pubspec.lock` з коміту YY (b397b59)? Сервер їх не використовує.
-2. Пушимо `feature/opendota-sync` і відкриваємо один PR (OpenDota + AI + Dockerfile)?
-3. Пороги тірів S ≥ 53%, A ≥ 50%, B ≥ 48% влаштовують ЖЕ і TY?
+1. YY: `lib/db.dart` (оновлений у 512a9fc) дублює `lib/db/app_database.dart`, яким користується сервер. Лишаємо один варіант? І чи прибираємо `bin/backend.dart` та `bin/pubspec.lock`?
+2. Пороги тірів S ≥ 53%, A ≥ 50%, B ≥ 48% влаштовують ЖЕ і TY?

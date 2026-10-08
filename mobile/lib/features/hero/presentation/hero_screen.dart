@@ -37,7 +37,7 @@ class HeroScreen extends ConsumerWidget {
             else
               ErrorState(
                 title: 'Не вдалося завантажити героя',
-                message: 'Перевірте інтернет і спробуйте ще раз.',
+                message: loadErrorMessage(error),
                 onRetry: () => ref.invalidate(heroDetailsProvider(heroId)),
               ),
           ],

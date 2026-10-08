@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../network/api_client.dart';
 import '../theme/theme_context.dart';
+
+/// Пояснення для гравця, чому дані не завантажились.
+String loadErrorMessage(Object error) => switch (error) {
+      ApiException(failure: ApiFailure.server) => 'Сервер не відповідає. Спробуйте ще раз за хвилину.',
+      _ => 'Перевірте інтернет і спробуйте ще раз.',
+    };
 
 /// Банер над контентом: офлайн (кларетка) або невдале оновлення (фласка).
 class StatusBanner extends StatelessWidget {

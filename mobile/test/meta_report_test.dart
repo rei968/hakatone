@@ -47,4 +47,10 @@ void main() {
     expect([for (final h in groups.first.$2) h.name], ['High A', 'Low A']);
     expect(groups[1].$2.single.aiSummary, isNull, reason: 'порожня підказка не показується');
   });
+
+  test('updated_at: null від бекенду без героїв не ламає розбір', () {
+    final report = MetaReport.fromJson({'updated_at': null, 'patch': '7.37d', 'meta_heroes': []});
+    expect(report.updatedAt, isNull);
+    expect(report.byTier, isEmpty);
+  });
 }

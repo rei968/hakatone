@@ -85,7 +85,7 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
         child: RefreshIndicator(
           onRefresh: _refresh,
           child: report == null
-              ? (meta.hasError ? _error() : _skeleton())
+              ? (meta.hasError ? _error(meta.error!) : _skeleton())
               : _content(report, refreshFailed: meta.hasError),
         ),
       ),
@@ -182,7 +182,7 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
     );
   }
 
-  Widget _error() {
+  Widget _error(Object error) {
     final m = context.metrics;
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -191,7 +191,7 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
         SizedBox(height: m.space4),
         ErrorState(
           title: 'Не вдалося завантажити мету',
-          message: 'Перевірте інтернет і спробуйте ще раз. Щойно дані завантажаться, вони працюватимуть і без мережі.',
+          message: '${loadErrorMessage(error)} Щойно дані завантажаться, вони працюватимуть і без мережі.',
           onRetry: _refresh,
         ),
       ],

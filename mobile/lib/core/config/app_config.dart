@@ -10,8 +10,12 @@ abstract final class AppConfig {
   /// Адреса бекенду команди (`docs/openapi.yaml`).
   static const apiBaseUrl = String.fromEnvironment('API_BASE_URL');
 
-  /// Поки бекенд не готовий, дані й вхід працюють на моках з `assets/mocks`.
+  /// Мета й герої з `assets/mocks` замість бекенду.
   static const useMocks = bool.fromEnvironment('USE_MOCKS', defaultValue: true);
+
+  /// Вхід на моках окремо від даних: бекенд уже віддає мету й героїв,
+  /// а `/api/auth/*` ще ні. За замовчуванням — як [useMocks].
+  static const mockAuth = bool.fromEnvironment('MOCK_AUTH', defaultValue: useMocks);
 
   /// Якщо запустили без `--dart-define-from-file`, назва це покаже прямо
   /// на екрані, але запуск не зламається.

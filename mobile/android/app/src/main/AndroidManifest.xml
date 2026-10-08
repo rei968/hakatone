@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Мета й герої приходять з бекенду команди (docs/openapi.yaml). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="dota_builds"
         android:name="${applicationName}"

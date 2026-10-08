@@ -1,11 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/app_config.dart';
+import '../../../core/network/api_client.dart';
+import '../data/api_auth_repository.dart';
 import '../data/auth_repository.dart';
 import '../data/session_store.dart';
 import '../domain/auth_session.dart';
 
-final authRepositoryProvider = Provider<AuthRepository>((ref) => MockAuthRepository());
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AppConfig.mockAuth ? MockAuthRepository() : ApiAuthRepository(ref.watch(dioProvider)),
+);
 
 final sessionStoreProvider = Provider<SessionStore>((ref) => InMemorySessionStore());
 

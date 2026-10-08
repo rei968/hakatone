@@ -63,7 +63,7 @@ class MetaReport {
   const MetaReport({required this.updatedAt, required this.patch, required this.heroes});
 
   factory MetaReport.fromJson(Map<String, dynamic> json) => MetaReport(
-        updatedAt: DateTime.parse(json['updated_at'] as String),
+        updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? ''),
         patch: json['patch'] as String? ?? '',
         heroes: [
           for (final hero in json['meta_heroes'] as List? ?? const [])
@@ -71,13 +71,14 @@ class MetaReport {
         ],
       );
 
-  /// Коли бекенд востаннє перерахував мету (UTC).
-  final DateTime updatedAt;
+  /// Коли бекенд востаннє перерахував мету (UTC). Бекенд віддає `null`,
+  /// коли в його БД ще немає героїв — тоді індикатор показує лише патч.
+  final DateTime? updatedAt;
   final String patch;
   final List<MetaHero> heroes;
 
   Map<String, dynamic> toJson() => {
-        'updated_at': updatedAt.toUtc().toIso8601String(),
+        'updated_at': updatedAt?.toUtc().toIso8601String(),
         'patch': patch,
         'meta_heroes': [for (final hero in heroes) hero.toJson()],
       };

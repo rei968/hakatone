@@ -2,5 +2,6 @@
   "APP_NAME": "MangoDota",
   "APPLICATION_ID": "com.example.dota_builds",
   "API_BASE_URL": "http://10.0.2.2:8080",
-  "USE_MOCKS": "true"
+  "USE_MOCKS": "true",
+  "MOCK_AUTH": "true"
 }

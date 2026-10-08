@@ -52,8 +52,12 @@
 - [ ] Бекенд: `stats`, `bio`, `attack_type` уже є в сідах, але ще не описані в `HeroWithBuild` у `openapi.yaml`
 
 ## 7. Підключення до API (dio + Riverpod)
-- [ ] `baseUrl` бекенду, Bearer-токен після входу
-- [ ] 401 від API повертає на вхід
+- [x] dio 5.11: `API_BASE_URL` з `config/app.json`, таймаут 10 с, помилки → мережа / сервер / 404 / 400 / 401
+- [x] `Api*Repository` для входу, мети й героя; моки вмикаються `USE_MOCKS`, вхід окремо — `MOCK_AUTH`
+- [x] Bearer-токен лише для захищених запитів (`/admin/sync`), 401 на них закриває сесію
+- [x] INTERNET у маніфесті Android, http до локального бекенду лише в debug
+- [x] Перевірено з бекендом із `feature/backend-skeleton`: мета, картка, 404 — 38/38 тестів
+- [ ] Бекенд: `/api/auth/login` і `/register` ще повертають 404; у CORS додати `Authorization`
 
 ## 8. Кеш у Hive, стани завантаження/помилки
 - [ ] Остання мета і сесія в Hive

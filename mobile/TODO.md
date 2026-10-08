@@ -81,7 +81,7 @@
 - [x] Темний екран старту замість білого (і Android 12+ splash)
 - [x] http дозволяється лише для `http://` адреси API; APK підписується debug-ключем
 - [x] Інструкція збірки — [docs/BUILD.md](docs/BUILD.md)
-- [~] `flutter build apk --release` — на цій машині немає Android SDK, збирає інша людина за BUILD.md
+- [x] `flutter build apk --release` — збирає NL (тестовий APK з бекендом v2 — коміт `0a53d32`)
 
 ## 11. v2: нижнє меню й гостьовий режим
 - [x] Вкладки Головна · Мета · Профіль (`StatefulShellRoute`), картка героя на весь екран
@@ -119,6 +119,12 @@
 - [x] Робота поділена: фронт — пункти 11–17, бекенд — за промптом [docs/BACKEND_V2_PROMPT.md](docs/BACKEND_V2_PROMPT.md)
 - [x] Бекенд (PR #10, #11 у `develop`): справжній патч з OpenDota, `?rank=`, `matches`, `win_rate_delta`, AI-білд v2 (18 рівнів, таланти, таймінги, ситуативні предмети)
 - Фронт читає нові поля, але працює й без них, тож PR можна зливати в будь-якому порядку
+
+## 19. Автооновлення з GitHub Releases
+- [x] Перевірка `releases/latest` раз на добу (лише релізна збірка на Android), діалог «Доступна нова версія», завантаження з прогресом і SHA-256, системне встановлення (`lib/features/update`)
+- [x] Релізний підпис з `android/key.properties` або змінних середовища, без них — debug-ключ
+- [x] GitHub Actions: тег `v*` → тести → підписаний APK у Releases ([docs/BUILD.md](docs/BUILD.md), «Реліз і автооновлення»)
+- [ ] Згенерувати релізний ключ і додати 4 секрети в GitHub, випустити перший реліз
 
 ## Git
 - [x] remote `origin`, гілка `feature/main-menu` від `origin/develop`, проєкт у `mobile/`

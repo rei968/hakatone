@@ -13,7 +13,9 @@ import '../widgets/app_shell.dart';
 import '../widgets/not_found_screen.dart';
 import 'app_routes.dart';
 
-final _rootKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+/// Кореневий навігатор: через нього діалоги (наприклад, оновлення застосунку)
+/// показуються поверх будь-якого екрана, а картка героя — поверх нижнього меню.
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 /// Splash, поки сесія невідома. Новий гравець бачить «Увійти через Steam» один раз,
 /// далі — три вкладки. Мета й герої відкриті й гостям, профіль просить увійти.
@@ -22,7 +24,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(authControllerProvider, (_, next) => auth.value = next);
 
   final router = GoRouter(
-    navigatorKey: _rootKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     refreshListenable: auth,
     redirect: (context, state) {
@@ -42,7 +44,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(
         path: AppRoutes.login,
-        parentNavigatorKey: _rootKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const SteamLoginScreen(),
       ),
       StatefulShellRoute.indexedStack(
@@ -62,7 +64,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Картка героя на весь екран, поверх нижнього меню.
       GoRoute(
         path: AppRoutes.heroPattern,
-        parentNavigatorKey: _rootKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final heroId = int.tryParse(state.pathParameters['heroId'] ?? '');
           return heroId == null ? const NotFoundScreen() : HeroScreen(heroId: heroId);

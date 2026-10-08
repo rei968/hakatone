@@ -14,6 +14,10 @@ abstract final class AppConfig {
   /// завжди береться з OpenDota.
   static const useMocks = bool.fromEnvironment('USE_MOCKS', defaultValue: true);
 
+  /// Репозиторій `owner/name`, з GitHub Releases якого застосунок бере оновлення.
+  /// Порожній — автооновлення вимкнене.
+  static const updateRepo = String.fromEnvironment('UPDATE_REPO');
+
   /// Якщо запустили без `--dart-define-from-file`, назва це покаже прямо
   /// на екрані, але запуск не зламається.
   static String get appName => _appName.isEmpty ? 'APP_NAME не задано' : _appName;

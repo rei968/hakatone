@@ -1,7 +1,7 @@
 # 🥭 MangoDota
 
 Мобільний інтерактивний асистент та довідник з Dota 2 (актуальна мета з OpenDota + персоналізовані AI-білди від Google Gemini).  
-Проєкт розроблено в рамках хакатону командою **Kakatone**.
+Проєкт розроблено в рамках хакатону командою **Ейай**.
 
 ---
 
@@ -53,8 +53,15 @@ hakatone/
 
 1. Основна гілка: `main` (завжди стабільна, готова для презентації).
 2. Робоча інтеграційна гілка: `develop`.
-3. Фічі розробляються в окремих гілках від `develop`:
-   - `feature/main-menu` (TY)
-   - `feature/opendota-sync` (NL)
-   - `feature/db-seeds-init` (YY)
+3. Фічі розробляються в окремих гілках від `develop`.
 4. Злиття тільки через Pull Request у `develop` після перевірки Тімлідом/QA.
+
+
+## Tech Stack
+
+![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)
+![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)
+![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)

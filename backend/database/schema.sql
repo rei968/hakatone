@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS heroes (
     bio TEXT,
     stats TEXT,             -- Зберігається як JSON-об'єкт: '{"base_hp": 700, "base_mana": 267}'
     ai_summary TEXT,
+    matches INTEGER,        -- pub_pick з OpenDota: скільки разів героя взяли (усі ранги)
+    win_rate_delta REAL,    -- зміна вінрейту за тиждень, п.п. (з pub_*_trend)
+    rank_stats TEXT,        -- JSON: '{"1": {"pick": 11964, "win": 6073}, ..., "7": {...}}' (1 Herald … 7 Divine)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -34,7 +37,15 @@ CREATE TABLE IF NOT EXISTS ai_builds (
     skill_order TEXT,       -- Зберігається як JSON-масив: '["Meat Hook","Rot"]'
     core_items TEXT,        -- Зберігається як JSON-масив: '["Phase Boots","Blink Dagger"]'
     tactics TEXT,
+    talents TEXT,           -- JSON-масив: '[{"level": 10, "side": "L", "name": "+10% Lifesteal"}, ...]'
+    item_timings TEXT,      -- JSON-об'єкт: '{"Radiance": 1040}' (секунди, рахує код)
+    situational_items TEXT, -- JSON-масив: '[{"name": "Black King Bar", "reason": "Проти контролю"}]'
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS app_meta (
+    key TEXT PRIMARY KEY,   -- наприклад "patch"
+    value TEXT
 );
 
 CREATE TABLE IF NOT EXISTS users (

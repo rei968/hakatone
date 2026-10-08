@@ -7,6 +7,7 @@ import 'package:backend/ai/hero_analyzer.dart';
 import 'package:backend/auth/auth_service.dart';
 import 'package:backend/db/app_database.dart';
 import 'package:backend/db/database_files.dart';
+import 'package:backend/meta/hero_stats.dart';
 import 'package:backend/sync/hero_sync.dart';
 
 const _jsonHeaders = {'content-type': 'application/json; charset=utf-8'};
@@ -16,7 +17,7 @@ Response _json(Object body, {int status = 200}) =>
 
 String _readSeed(String name) => findDatabaseFile('seeds/$name').readAsStringSync();
 
-// The DB has no patch column yet, so the patch comes from meta.json.
+// Fallback until the first sync saves the real patch from OpenDota.
 // Top-level finals are lazy: the file is read on first access, then cached.
 final String _seedPatch = (jsonDecode(_readSeed('meta.json')) as Map<String, dynamic>)['patch'] as String;
 
@@ -64,10 +65,23 @@ Router buildRouter(AppDatabase db, HeroSync sync, HeroAnalyzer? analyzer, AuthSe
       }));
 
   router.get('/api/meta/dota', (Request req) {
+    final int? bracket;
     try {
-      final heroes = db.metaHeroes();
-      if (heroes.isNotEmpty) {
-        return _json({'updated_at': db.lastUpdated(), 'patch': _seedPatch, 'meta_heroes': heroes});
+      bracket = parseRank(req.url.queryParameters['rank']);
+    } on InvalidRankException {
+      return _json({'error': 'invalid_rank'}, status: 400);
+    }
+
+    try {
+      final meta = db.metaHeroes(bracket: bracket);
+      if (meta.heroes.isNotEmpty) {
+        return _json({
+          'updated_at': db.lastUpdated(),
+          'patch': db.patch() ?? _seedPatch,
+          'rank': rankName(bracket),
+          'total_matches': meta.totalMatches,
+          'meta_heroes': meta.heroes,
+        });
       }
     } catch (e) {
       print('meta: DB read failed, serving seed: $e');
@@ -79,17 +93,25 @@ Router buildRouter(AppDatabase db, HeroSync sync, HeroAnalyzer? analyzer, AuthSe
   router.get('/api/dota/heroes/<id|[0-9]+>', (Request req, String id) async {
     final heroId = int.tryParse(id);
     if (heroId == null) return _json({'error': 'hero_not_found'}, status: 404);
+    final int? bracket;
+    try {
+      bracket = parseRank(req.url.queryParameters['rank']);
+    } on InvalidRankException {
+      return _json({'error': 'invalid_rank'}, status: 400);
+    }
 
     Map<String, Object?>? hero;
     try {
-      hero = db.heroWithBuild(heroId);
-      // No cached build yet: generate it on this first request and store it in ai_builds.
-      if (hero != null && hero['ai_build'] == null && analyzer != null) {
+      hero = db.heroWithBuild(heroId, bracket: bracket);
+      // No build yet, or a v1 build without talents: generate it now and store it in ai_builds.
+      // Until the new one is ready (or if it fails) the old build is served.
+      final build = hero?['ai_build'] as Map<String, Object?>?;
+      if (hero != null && (build == null || build['talents'] == null) && analyzer != null) {
         try {
           await analyzer.analyze(heroId).timeout(_aiTimeout);
-          hero = db.heroWithBuild(heroId);
+          hero = db.heroWithBuild(heroId, bracket: bracket);
         } catch (e) {
-          print('hero $heroId: AI analysis failed, serving without a build: $e');
+          print('hero $heroId: AI analysis failed, serving the previous build: $e');
         }
       }
     } catch (e) {

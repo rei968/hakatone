@@ -45,8 +45,8 @@
 - [x] Dockerfile: `database/` у образі, `WORKDIR /app`; `dart build cli` збирає і `develop`
 - [x] Web Service на Render: Root Directory `backend`, Docker, env `GEMINI_API_KEY` і `JWT_SECRET`
 - [x] Публічний URL: [hakatone.onrender.com](https://hakatone.onrender.com/api/health), усі ендпоінти й `test_endpoints.ps1` перевірено
-- [~] Повідомлення для TY з URL і контрактом підготовлено, треба надіслати
-- [ ] Перемкнути Render з `feature/backend-auth` на `develop` (PR #3–#5 уже там)
+- [x] TY підключив застосунок до hakatone.onrender.com з авторизацією (PR #6 у `develop`)
+- [x] Render збирає `develop` (PR #3–#7 влито)
 - SQLite на Render живе до рестарту, для демо це прийнятно
 
 ## 8. Реалізація авторизації
@@ -60,6 +60,21 @@
 - [x] На Render: реєстрація, вхід і `/admin/sync` з токеном працюють
 - Користувачі живуть у SQLite, тож на Render зникають після рестарту
 
+## 9. Бекенд v2 (на перевірці)
+- [x] Справжній патч з OpenDota `/constants/patch` при кожному sync (зараз 7.41); без OpenDota — попередній або з `meta.json`
+- [x] `?rank=herald…divine` для мети й героя: вінрейт, пікрейт і тір з `N_pick`/`N_win` `/heroStats` (колонка `rank_stats`); невідоме значення — 400 `invalid_rank`
+- [x] Нові поля мети: `rank`, `total_matches`; у героя `matches` і `win_rate_delta` (доби 3–5 мінус 0–2 з `pub_*_trend`)
+- [x] AI-білд v2: `skill_order` на 18 рівнів з `L`/`R`/`-`, `talents`, `situational_items`; невалідну відповідь Gemini код відкидає
+- [x] Таланти з `/constants/hero_abilities`: у парі OpenDota перший — правий у грі (звірено з Dota 2 Wiki на Pudge і Wraith King)
+- [x] `item_timings` рахує код з `/scenarios/itemTimings`, зважено на ігри
+- [x] Старі білди без `talents` перегенеровуються під час запиту героя, поки нового немає — віддається старий
+- [x] Міграція наявних БД: `ALTER TABLE … ADD COLUMN` через `PRAGMA table_info`
+- [x] Сіди й моки: патч 7.41, нові поля, білд v2 для 14, 8, 74; Pudge — Meat Shield, Invoker — Quas/Wex/Exort/Invoke
+- [x] `openapi.yaml`, `test_endpoints.ps1`, Postman: `rank`, нові поля, `invalid_rank`
+- [x] Тести `backend/test/`: 32 зелені
+- [ ] TY: два мобільні тести чекають старих сідів (`meta_report_test.dart:22` — патч 7.37d, `hero_details_test.dart` — 6 рівнів у Pudge)
+- [ ] У героїв поза сідом `abilities` порожні, тож іконок для `skill_order` клієнт там не знайде
+
 ## Підготовка до демо (14:40)
 - [ ] ЖЕ: реліз `develop` → `main`, якщо демо йде з `main` (зараз `main` відкочено на `0151442`, бекенду там немає)
 - [ ] Після ~14:00 нічого не вливати в гілку, яку збирає Render: кожен пуш рестартує сервер і стирає акаунти
@@ -70,13 +85,9 @@
 
 ## Порядок у репо після YY
 - [x] Прямий пуш YY у `main` прибрано
-- [x] Прибрано порожній `bin/backend.dart` і `bin/pubspec.lock` (за згодою YY)
+- [x] Прибрано порожній `bin/backend.dart` і `bin/pubspec.lock` (за згодою YY, PR #7 влито)
 - [x] Прибрано `lib/db.dart` і `bin/test_db.dart`, що дублювали БД сервера (за згодою YY)
 - `6ecb83d` пішов у `develop` без PR; далі тільки через PR
-
-## Після демо (не потрібно)
-- [ ] Тренди за `pub_pick_trend`
-- [ ] Детект патча замість `patch` з `meta.json`
 
 ## Питання
 1. YY: таблиця `users` у `schema.sql` (з PR #5) ок?

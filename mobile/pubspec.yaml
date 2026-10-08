@@ -17,6 +17,8 @@ dependencies:
   hive_ce: ^2.20.2
   hive_ce_flutter: ^2.4.0
   intl: any
+  ota_update: ^7.1.0
+  package_info_plus: ^10.2.2
 
 dev_dependencies:
   flutter_test:

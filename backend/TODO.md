@@ -72,7 +72,7 @@
 - [x] Сіди й моки: патч 7.41, нові поля, білд v2 для 14, 8, 74; Pudge — Meat Shield, Invoker — Quas/Wex/Exort/Invoke
 - [x] `openapi.yaml`, `test_endpoints.ps1`, Postman: `rank`, нові поля, `invalid_rank`
 - [x] Тести `backend/test/`: 32 зелені
-- [ ] TY: два мобільні тести чекають старих сідів (`meta_report_test.dart:22` — патч 7.37d, `hero_details_test.dart` — 6 рівнів у Pudge)
+- [x] Два мобільні тести оновлено під нові сіди (патч 7.41, 18 рівнів у Pudge), `flutter test` 49/49
 - [ ] У героїв поза сідом `abilities` порожні, тож іконок для `skill_order` клієнт там не знайде
 
 ## Підготовка до демо (14:40)

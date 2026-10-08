@@ -19,7 +19,7 @@ void main() {
     final json = jsonDecode(File('assets/mocks/meta.json').readAsStringSync()) as Map<String, dynamic>;
     final report = MetaReport.fromJson(json);
 
-    expect(report.patch, '7.37d');
+    expect(report.patch, '7.41');
     expect(report.updatedAt, DateTime.utc(2026, 10, 8, 9));
     expect(report.heroes, hasLength(3));
 

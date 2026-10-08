@@ -48,7 +48,6 @@ class AppDatabase {
 
     return {
       ..._metaHero(hero),
-      'attack_type': hero['attack_type'],
       'bio': hero['bio'],
       'stats': _decodeJson(hero['stats']),
       'abilities': [for (final a in abilities) {...a}],
@@ -126,6 +125,7 @@ class AppDatabase {
         'win_rate': row['win_rate'],
         'pick_rate': row['pick_rate'],
         'primary_attr': row['primary_attr'],
+        'attack_type': row['attack_type'],
         'roles': _decodeJson(row['roles']),
         'avatar_url': row['avatar_url'],
         'tier': row['tier'],

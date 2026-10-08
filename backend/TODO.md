@@ -40,7 +40,7 @@
 - [x] Без ключа або при помилці AI героя віддаємо без білда, а не 500
 - [x] Закомічено в `feature/opendota-sync`
 - [x] У [PR #4](https://github.com/rei968/hakatone/pull/4)
-- [ ] Попередити ЖЕ: в `openapi.yaml` і презентації досі згадується Claude API
+- [x] Документи в `develop` переведено на Gemini (77ea0f7)
 
 ## 7. Деплой на Render/Railway
 - [x] Dockerfile: `database/` у образі, `WORKDIR /app`; бандл `dart build cli` перевірено локально
@@ -59,7 +59,7 @@
 - [x] Паролі через PBKDF2-HMAC-SHA256 (20 000 ітерацій, сіль), JWT HS256 на 7 днів
 - [x] CORS пропускає заголовок `Authorization`
 - [x] `docs/test_endpoints.ps1` проходить усі 5 кроків
-- [~] Коміт у `feature/backend-auth`, ще не запушено
+- [x] Гілка `feature/backend-auth` запушена, PR у `develop`
 - [ ] `JWT_SECRET` у змінних середовища на Render
 - Користувачі живуть у SQLite, тож на Render зникають після рестарту
 

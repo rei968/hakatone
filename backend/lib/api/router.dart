@@ -60,7 +60,7 @@ Router buildRouter(AppDatabase db, HeroSync sync, HeroAnalyzer? analyzer, AuthSe
 
   router.get('/api/health', (Request req) => _json({
         'status': 'ok',
-        'time': DateTime.now().toUtc().toIso8601String(),
+        'timestamp': DateTime.now().toUtc().toIso8601String(),
       }));
 
   router.get('/api/meta/dota', (Request req) {

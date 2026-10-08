@@ -7,8 +7,8 @@
 backend/
 ├── database/
 │   ├── schema.sql         # SQL створення таблиць
-│   └── seeds/             # Готові початкові дані (dota2.json, cs2.json)
-└── src/                   # Вихідний код сервера API (NestJS / FastAPI / Express)
+│   └── seeds/             # Готові початкові дані (dota2.json, meta.json, cs2.json)
+└── bin/ (або src/)        # Сервер API на Dart (shelf)
 ```
 
 ## 🚀 Швидкий старт

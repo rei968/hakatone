@@ -48,7 +48,7 @@
 - [x] Web Service на Render: Root Directory `backend`, runtime Docker, env `GEMINI_API_KEY`
 - [x] Публічний URL: [hakatone.onrender.com](https://hakatone.onrender.com/api/health), усі ендпоінти перевірено
 - [ ] Передати URL TY
-- [ ] Після мерджу #3 і #4 перемкнути Render з `feature/opendota-sync` на `develop` або `main`
+- [ ] Після мерджу #3, #4, #5 перемкнути Render з `feature/backend-auth` на `develop` або `main`
 - SQLite на Render живе до рестарту, для демо це прийнятно
 - Безкоштовний інстанс засинає без запитів, перед демо його треба «розбудити»
 
@@ -61,7 +61,7 @@
 - [x] `docs/test_endpoints.ps1` проходить усі 5 кроків
 - [x] Коди помилок (`ErrorResponse`) описано в `docs/openapi.yaml`
 - [x] [PR #5](https://github.com/rei968/hakatone/pull/5) у `develop` (мерджити після #3 і #4)
-- [ ] Render: гілка `feature/backend-auth` + `JWT_SECRET`, щоб TY міг логінитись
+- [x] Render на `feature/backend-auth` з `JWT_SECRET`; `test_endpoints.ps1` проходить на hakatone.onrender.com
 
 - Користувачі живуть у SQLite, тож на Render зникають після рестарту
 

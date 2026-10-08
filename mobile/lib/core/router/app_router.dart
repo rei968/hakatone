@@ -10,6 +10,10 @@ import '../../features/splash/presentation/splash_screen.dart';
 import '../widgets/not_found_screen.dart';
 import 'app_routes.dart';
 
+/// Кореневий навігатор: через нього діалоги (наприклад, оновлення застосунку)
+/// показуються поверх будь-якого екрана.
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 /// Потік екранів (docs/design/02-auth.html, «Потік екранів»): поки сесія
 /// невідома — splash, без сесії — вхід або реєстрація, із сесією — мета.
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -17,6 +21,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(authControllerProvider, (_, next) => authStatus.value = next.status);
 
   final router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     refreshListenable: authStatus,
     redirect: (context, state) {

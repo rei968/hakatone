@@ -1,9 +1,19 @@
 import groovy.json.JsonSlurper
+import java.util.Properties
 
 // Єдине джерело назви, applicationId і адреси API — mobile/config/app.json
 // (його ж читає Dart через --dart-define-from-file).
 @Suppress("UNCHECKED_CAST")
 val appConfig = JsonSlurper().parse(rootProject.file("../config/app.json")) as Map<String, String>
+
+// Релізний ключ: локально — android/key.properties, у GitHub Actions — змінні середовища
+// (див. mobile/docs/BUILD.md). Обидва варіанти в git не потрапляють.
+val keyProperties = Properties().apply {
+    rootProject.file("key.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+fun signingValue(property: String, env: String): String? =
+    keyProperties.getProperty(property) ?: System.getenv(env)
+val releaseKeystore = signingValue("storeFile", "ANDROID_KEYSTORE_PATH")
 
 plugins {
     id("com.android.application")
@@ -39,10 +49,22 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = signingValue("storePassword", "ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = signingValue("keyAlias", "ANDROID_KEY_ALIAS")
+                keyPassword = signingValue("keyPassword", "ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Для хакатону APK підписується debug-ключем. Власний ключ — див. mobile/docs/BUILD.md.
-            signingConfig = signingConfigs.getByName("debug")
+            // Автооновлення працює лише між APK з одним ключем, тож релізи в GitHub Releases
+            // підписуються релізним ключем. Без нього (локальна збірка) — debug-ключ, як раніше.
+            signingConfig = signingConfigs.getByName(if (releaseKeystore != null) "release" else "debug")
         }
     }
 }

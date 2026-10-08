@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Плагін ota_update зберігає APK оновлення у <dataDir>/files/ota_update. -->
+<paths>
+    <files-path name="ota_update" path="ota_update/" />
+</paths>

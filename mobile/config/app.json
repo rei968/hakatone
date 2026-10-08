@@ -3,5 +3,6 @@
   "APPLICATION_ID": "com.kakatone.mangodota",
   "API_BASE_URL": "https://hakatone.onrender.com",
   "USE_MOCKS": "false",
-  "MOCK_AUTH": "false"
+  "MOCK_AUTH": "false",
+  "UPDATE_REPO": "rei968/hakatone"
 }

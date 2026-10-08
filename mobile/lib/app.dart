@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/app_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/update/presentation/update_gate.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -19,6 +20,7 @@ class App extends ConsumerWidget {
       supportedLocales: const [Locale('uk')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       routerConfig: ref.watch(appRouterProvider),
+      builder: (context, child) => UpdateGate(child: child ?? const SizedBox.shrink()),
     );
   }
 }

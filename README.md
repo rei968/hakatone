@@ -60,7 +60,7 @@ hakatone/
 4. Злиття тільки через Pull Request у `develop` після перевірки Тімлідом/QA.
 
 
-##Tech Stack
+## Tech Stack
 
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)

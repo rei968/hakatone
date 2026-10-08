@@ -7,7 +7,7 @@
 
 ## 👥 Команда та розподіл ролей
 
-- **Team Lead & QA / Тестувальник (ЖЕ):** Загальна архітектура, контроль стандартів розробки, Git-процеси, тестування API та клієнта, фінальний реліз і демо.
+- **Team Lead & QA (ЖЕ):** Загальна архітектура, контроль стандартів розробки, Git-процеси, тестування API та клієнта, фінальний реліз і демо.
 - **Backend - API & Business Logic (NL):** Dart (`shelf`) сервер, інтеграція OpenDota API та Google Gemini API (`gemini-3.5-flash-lite`), фоновий воркер оновлення мети, ендпоінти, Dockerfile.
 - **Backend - Database (YY):** Проєктування та налаштування БД (**SQLite 3**), сід-скрипт для Dota 2, резервний дамп даних.
 - **Frontend - Mobile (TY):** Flutter-додаток (`dio`, `Riverpod`, локальний кеш у `Hive`), екран мети (тіри S–C), картки героїв та AI-білдів.
@@ -40,7 +40,7 @@ hakatone/
 
 ---
 
-## ⚡ Швидкий старт для кожного учасника
+## ⚡ Старт для кожного учасника
 
 1. **Мобільному розробнику (TY):** Почніть з вивчення [mobile/README.md](mobile/README.md). Моделі відповідають [docs/openapi.yaml](docs/openapi.yaml) та [backend/database/seeds/dota2.json](backend/database/seeds/dota2.json).
 2. **Розробнику БД (YY):** Ознайомтеся з [docs/DATABASE_ERD.md](docs/DATABASE_ERD.md) та застосуйте чистий SQLite3 скрипт [backend/database/schema.sql](backend/database/schema.sql).
@@ -51,10 +51,10 @@ hakatone/
 
 ## 🌿 Git Workflow
 
-1. Основна гілка: `main` (завжди стабільна, готова для презентації).
+1. Основна гілка: `main`.
 2. Робоча інтеграційна гілка: `develop`.
 3. Фічі розробляються в окремих гілках від `develop`.
-4. Злиття тільки через Pull Request у `develop` після перевірки Тімлідом/QA.
+4. Злиття тільки через Pull Request у `develop` після перевірки Тімлідом.
 
 
 ## Tech Stack

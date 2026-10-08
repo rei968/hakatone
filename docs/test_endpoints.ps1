@@ -2,7 +2,7 @@ param (
     [string]$BaseUrl = "http://localhost:8080"
 )
 
-Write-Host "=== ТЕСТУВАННЯ ЕНДПОІНТІВ MANGODATA API (QA: ЖЕ) ===" -ForegroundColor Cyan
+Write-Host "=== ТЕСТУВАННЯ ЕНДПОІНТІВ MANGODOTA API (QA: ЖЕ) ===" -ForegroundColor Cyan
 
 # 1. Реєстрація
 Write-Host "`n1. POST /api/auth/register" -ForegroundColor Yellow

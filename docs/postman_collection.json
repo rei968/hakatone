@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "MangoData API",
-    "description": "Тестова колекція для QA (ЖЕ) для перевірки всіх ендпоінтів сервера MangoData",
+    "name": "MangoDota API",
+    "description": "Тестова колекція для QA (ЖЕ) для перевірки всіх ендпоінтів сервера MangoDota (Shelf + Gemini AI)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

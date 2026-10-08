@@ -53,10 +53,7 @@ hakatone/
 
 1. Основна гілка: `main` (завжди стабільна, готова для презентації).
 2. Робоча інтеграційна гілка: `develop`.
-3. Фічі розробляються в окремих гілках від `develop`:
-   - `feature/main-menu` (TY)
-   - `feature/opendota-sync` (NL)
-   - `feature/db-seeds-init` (YY)
+3. Фічі розробляються в окремих гілках від `develop`.
 4. Злиття тільки через Pull Request у `develop` після перевірки Тімлідом/QA.
 
 

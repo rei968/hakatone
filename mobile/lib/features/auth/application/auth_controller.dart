@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/storage/app_storage.dart';
 import '../data/api_auth_repository.dart';
 import '../data/auth_repository.dart';
 import '../data/session_store.dart';
@@ -12,7 +13,9 @@ final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => AppConfig.mockAuth ? MockAuthRepository() : ApiAuthRepository(ref.watch(dioProvider)),
 );
 
-final sessionStoreProvider = Provider<SessionStore>((ref) => InMemorySessionStore());
+final sessionStoreProvider = Provider<SessionStore>(
+  (ref) => KeyValueSessionStore(ref.watch(appStorageProvider).session),
+);
 
 enum AuthStatus {
   /// Ще читаємо збережену сесію — показується splash.

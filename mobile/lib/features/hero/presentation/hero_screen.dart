@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/format/formatters.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/widgets/ai_text.dart';
@@ -22,12 +23,12 @@ class HeroScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final details = ref.watch(heroDetailsProvider(heroId));
+    final card = ref.watch(heroCardProvider(heroId));
     final m = context.metrics;
     return Scaffold(
       appBar: AppBar(),
-      body: details.when(
-        data: (d) => _HeroBody(details: d),
+      body: card.when(
+        data: (c) => _HeroBody(details: c.details, cachedAt: c.fromCache ? c.savedAt : null, staleError: c.staleError),
         loading: () => const _HeroSkeleton(),
         error: (error, _) => ListView(
           padding: EdgeInsets.all(m.space4),
@@ -38,7 +39,7 @@ class HeroScreen extends ConsumerWidget {
               ErrorState(
                 title: 'Не вдалося завантажити героя',
                 message: loadErrorMessage(error),
-                onRetry: () => ref.invalidate(heroDetailsProvider(heroId)),
+                onRetry: () => ref.invalidate(heroCardProvider(heroId)),
               ),
           ],
         ),
@@ -48,9 +49,13 @@ class HeroScreen extends ConsumerWidget {
 }
 
 class _HeroBody extends StatelessWidget {
-  const _HeroBody({required this.details});
+  const _HeroBody({required this.details, this.cachedAt, this.staleError});
 
   final HeroDetails details;
+
+  /// Не `null`, коли показуємо збережену картку, бо оновити не вдалося.
+  final DateTime? cachedAt;
+  final Object? staleError;
 
   @override
   Widget build(BuildContext context) {
@@ -59,10 +64,21 @@ class _HeroBody extends StatelessWidget {
     final aiBuild = details.aiBuild;
     final stats = details.stats;
     final bio = details.bio;
+    final offline = staleError is ApiException && (staleError! as ApiException).failure == ApiFailure.network;
 
     return ListView(
       padding: EdgeInsets.fromLTRB(m.space4, 0, m.space4, m.space8),
       children: [
+        if (cachedAt != null) ...[
+          StatusBanner(
+            icon: offline ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
+            iconColor: offline ? context.colors.clarity : context.colors.salve,
+            message: offline
+                ? 'Немає інтернету. Показуємо картку, збережену ${Fmt.dateTime(cachedAt!)}.'
+                : 'Не вдалося оновити картку. Показуємо дані від ${Fmt.dateTime(cachedAt!)}.',
+          ),
+          SizedBox(height: m.space4),
+        ],
         _Header(details: details),
         if (hero.roles.isNotEmpty) ...[
           SizedBox(height: m.space3),

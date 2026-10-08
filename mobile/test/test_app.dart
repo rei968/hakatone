@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dota_builds/core/router/app_router.dart';
+import 'package:dota_builds/core/storage/app_storage.dart';
 import 'package:dota_builds/core/theme/app_colors.dart';
 import 'package:dota_builds/core/theme/app_metrics.dart';
 import 'package:dota_builds/features/auth/application/auth_controller.dart';
@@ -26,18 +27,19 @@ class FileAssetBundle extends AssetBundle {
 
 /// Застосунок для віджет-тестів. Тема спрощена: `AppTheme` тягне шрифти
 /// з мережі, а в тестах мережі немає. Розширення теми ті самі.
-Widget testApp({List overrides = const []}) {
+/// Сховище — у пам’яті, якщо не передано інше.
+Widget testApp({MetaRepository? meta, HeroRepository? heroes, AppStorage? storage}) {
   return ProviderScope(
     retry: (retryCount, error) => null,
     overrides: [
+      appStorageProvider.overrideWithValue(storage ?? AppStorage.memory()),
       authRepositoryProvider.overrideWithValue(MockAuthRepository(latency: Duration.zero)),
       metaRepositoryProvider.overrideWithValue(
-        MockMetaRepository(bundle: FileAssetBundle(), latency: Duration.zero),
+        meta ?? MockMetaRepository(bundle: FileAssetBundle(), latency: Duration.zero),
       ),
       heroRepositoryProvider.overrideWithValue(
-        MockHeroRepository(bundle: FileAssetBundle(), latency: Duration.zero),
+        heroes ?? MockHeroRepository(bundle: FileAssetBundle(), latency: Duration.zero),
       ),
-      ...overrides,
     ],
     child: Consumer(
       builder: (context, ref, _) => MaterialApp.router(

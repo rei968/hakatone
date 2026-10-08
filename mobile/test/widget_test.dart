@@ -1,8 +1,21 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:dota_builds/core/network/api_client.dart';
+import 'package:dota_builds/core/storage/app_storage.dart';
 import 'package:dota_builds/features/auth/data/auth_repository.dart';
+import 'package:dota_builds/features/meta/application/meta_controller.dart';
+import 'package:dota_builds/features/meta/data/meta_repository.dart';
+import 'package:dota_builds/features/meta/domain/meta_report.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'test_app.dart';
+
+class _OfflineMeta implements MetaRepository {
+  @override
+  Future<MetaReport> fetchMeta() async => throw const ApiException(ApiFailure.network);
+}
 
 Future<void> signIn(WidgetTester tester) async {
   await tester.enterText(find.byKey(const Key('auth-email')), ' Player@Example.com ');
@@ -62,6 +75,22 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
     }
+  });
+
+  testWidgets('офлайн: мета з кешу з банером, а не помилка', (tester) async {
+    final storage = AppStorage.memory();
+    final report = MetaReport.fromJson(
+      jsonDecode(File('assets/mocks/meta.json').readAsStringSync()) as Map<String, dynamic>,
+    );
+    await JsonCache(storage.cache).write(MetaController.cacheKey, report.toJson(), DateTime(2026, 10, 8, 9, 12));
+
+    await tester.pumpWidget(testApp(meta: _OfflineMeta(), storage: storage));
+    await tester.pumpAndSettle();
+    await signIn(tester);
+
+    expect(find.text('Pudge'), findsOneWidget);
+    expect(find.textContaining('Немає інтернету'), findsOneWidget);
+    expect(find.textContaining('8 жов, 09:12'), findsWidgets);
   });
 
   testWidgets('у тірі A герої йдуть за вінрейтом', (tester) async {

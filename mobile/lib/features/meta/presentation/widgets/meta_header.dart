@@ -9,11 +9,23 @@ enum UpdateStatus { fresh, justSynced, refreshing, offline, failed }
 
 /// «Патч 7.37d · оновлено 12 хв тому» під назвою в шапці.
 class UpdatedIndicator extends StatelessWidget {
-  const UpdatedIndicator({super.key, required this.status, this.patch, this.updatedAt, required this.now});
+  const UpdatedIndicator({
+    super.key,
+    required this.status,
+    this.patch,
+    this.updatedAt,
+    this.savedAt,
+    required this.now,
+  });
 
   final UpdateStatus status;
   final String? patch;
+
+  /// Коли бекенд перерахував мету.
   final DateTime? updatedAt;
+
+  /// Коли дані потрапили на пристрій — для «Офлайн · дані від …».
+  final DateTime? savedAt;
   final DateTime now;
 
   @override
@@ -26,7 +38,7 @@ class UpdatedIndicator extends StatelessWidget {
       UpdateStatus.justSynced => (colors.dust, withPatch ?? 'Щойно оновлено', colors.dust),
       UpdateStatus.offline => (
           colors.textSubtle,
-          updatedAt == null ? 'Офлайн' : 'Офлайн · дані від ${Fmt.dateTime(updatedAt!)}',
+          (savedAt ?? updatedAt) == null ? 'Офлайн' : 'Офлайн · дані від ${Fmt.dateTime((savedAt ?? updatedAt)!)}',
           colors.textMuted,
         ),
       UpdateStatus.failed => (colors.textSubtle, 'Не вдалося оновити', colors.textMuted),

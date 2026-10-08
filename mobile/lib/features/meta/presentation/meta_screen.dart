@@ -7,7 +7,6 @@ import '../../../core/widgets/app_skeleton.dart';
 import '../../../core/widgets/brand.dart';
 import '../../../core/widgets/states.dart';
 import '../application/meta_controller.dart';
-import '../domain/meta_report.dart';
 import 'widgets/meta_header.dart';
 import 'widgets/tier_section.dart';
 
@@ -28,7 +27,8 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
   Future<void> _refresh() async {
     await ref.read(metaControllerProvider.notifier).refresh();
     if (!mounted) return;
-    setState(() => _justSynced = !ref.read(metaControllerProvider).hasError);
+    final meta = ref.read(metaControllerProvider);
+    setState(() => _justSynced = !meta.hasError && meta.value?.error == null);
   }
 
   bool _onScroll(ScrollNotification notification) {
@@ -41,17 +41,19 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
   @override
   Widget build(BuildContext context) {
     final meta = ref.watch(metaControllerProvider);
-    final report = meta.value;
+    final feed = meta.value;
+    final report = feed?.report;
     final colors = context.colors;
     final m = context.metrics;
 
-    final status = meta.isLoading
-        ? UpdateStatus.refreshing
-        : meta.hasError
-            ? UpdateStatus.failed
-            : _justSynced
-                ? UpdateStatus.justSynced
-                : UpdateStatus.fresh;
+    final status = switch (feed) {
+      _ when meta.isLoading || (feed?.refreshing ?? false) => UpdateStatus.refreshing,
+      null => UpdateStatus.failed,
+      MetaFeed(offline: true) => UpdateStatus.offline,
+      MetaFeed(error: != null) => UpdateStatus.failed,
+      _ when _justSynced => UpdateStatus.justSynced,
+      _ => UpdateStatus.fresh,
+    };
 
     return Scaffold(
       appBar: AppBar(
@@ -71,6 +73,7 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
                     status: status,
                     patch: report?.patch,
                     updatedAt: report?.updatedAt,
+                    savedAt: feed?.savedAt,
                     now: DateTime.now(),
                   ),
                 ],
@@ -84,29 +87,38 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
         onNotification: _onScroll,
         child: RefreshIndicator(
           onRefresh: _refresh,
-          child: report == null
+          child: feed == null
               ? (meta.hasError ? _error(meta.error!) : _skeleton())
-              : _content(report, refreshFailed: meta.hasError),
+              : _content(feed),
         ),
       ),
     );
   }
 
-  Widget _content(MetaReport report, {required bool refreshFailed}) {
+  Widget _content(MetaFeed feed) {
     final m = context.metrics;
+    final report = feed.report;
     final groups = report.byTier;
+    final saved = Fmt.dateTime(feed.savedAt);
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.only(bottom: m.space8),
       children: [
-        if (refreshFailed)
+        if (feed.error != null)
           Padding(
             padding: EdgeInsets.fromLTRB(m.space4, m.space1, m.space4, 0),
-            child: StatusBanner(
-              icon: Icons.error_outline_rounded,
-              iconColor: context.colors.salve,
-              message: 'Не вдалося оновити мету. Показуємо попередні дані.',
-            ),
+            child: feed.offline
+                ? StatusBanner(
+                    icon: Icons.wifi_off_rounded,
+                    iconColor: context.colors.clarity,
+                    message: 'Немає інтернету. Показуємо мету, збережену на пристрої $saved.',
+                  )
+                : StatusBanner(
+                    icon: Icons.error_outline_rounded,
+                    iconColor: context.colors.salve,
+                    message: 'Не вдалося оновити мету: ${loadErrorMessage(feed.error!).toLowerCase()} '
+                        'Показуємо дані від $saved.',
+                  ),
           ),
         Padding(
           padding: EdgeInsets.fromLTRB(m.space4, m.space4, m.space4, 0),

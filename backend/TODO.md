@@ -59,8 +59,10 @@
 - [x] Паролі через PBKDF2-HMAC-SHA256 (20 000 ітерацій, сіль), JWT HS256 на 7 днів
 - [x] CORS пропускає заголовок `Authorization`
 - [x] `docs/test_endpoints.ps1` проходить усі 5 кроків
-- [x] Гілка `feature/backend-auth` запушена, PR у `develop`
-- [ ] `JWT_SECRET` у змінних середовища на Render
+- [x] Коди помилок (`ErrorResponse`) описано в `docs/openapi.yaml`
+- [x] [PR #5](https://github.com/rei968/hakatone/pull/5) у `develop` (мерджити після #3 і #4)
+- [ ] Render: гілка `feature/backend-auth` + `JWT_SECRET`, щоб TY міг логінитись
+
 - Користувачі живуть у SQLite, тож на Render зникають після рестарту
 
 ## Після демо (не потрібно)

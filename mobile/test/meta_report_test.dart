@@ -7,11 +7,13 @@ import 'package:dota_builds/features/meta/domain/tier.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('мок meta.json збігається з сідом бекенду', () {
-    final mock = File('assets/mocks/meta.json').readAsStringSync();
-    final seed = File('../backend/database/seeds/meta.json').readAsStringSync();
-    expect(mock, seed, reason: 'Онови assets/mocks з backend/database/seeds');
-  });
+  for (final name in ['meta.json', 'dota2.json']) {
+    test('мок $name збігається з сідом бекенду', () {
+      final mock = File('assets/mocks/$name').readAsStringSync();
+      final seed = File('../backend/database/seeds/$name').readAsStringSync();
+      expect(mock, seed, reason: 'Онови assets/mocks з backend/database/seeds');
+    });
+  }
 
   test('розбирає meta.json за контрактом openapi', () {
     final json = jsonDecode(File('assets/mocks/meta.json').readAsStringSync()) as Map<String, dynamic>;

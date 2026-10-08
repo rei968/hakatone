@@ -8,7 +8,13 @@ import 'test_app.dart';
 void main() {
   final repository = MockHeroRepository(bundle: FileAssetBundle(), latency: Duration.zero);
 
-  test('збирає картку Pudge з мети, сідів і AI-білда', () async {
+  test('у Juggernaut усі 4 здібності за слотами', () async {
+    final jugg = await repository.fetchHero(8);
+    expect([for (final a in jugg.abilities) a.name], ['Blade Fury', 'Healing Ward', 'Blade Dance', 'Omnislash']);
+    expect(jugg.aiBuild?.coreItems, contains('Maelstrom'));
+  });
+
+  test('картка Pudge з сіду HeroWithBuild', () async {
     final pudge = await repository.fetchHero(14);
 
     expect(pudge.hero.name, 'Pudge');

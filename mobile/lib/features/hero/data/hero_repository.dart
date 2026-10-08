@@ -10,8 +10,9 @@ abstract interface class HeroRepository {
   Future<HeroDetails> fetchHero(int id);
 }
 
-/// Збирає `HeroWithBuild` з моків: мета (`meta.json`), лор, характеристики
-/// й здібності (`dota2.json`) і тимчасові AI-білди (`ai_builds.json`).
+/// Віддає героя з `assets/mocks/dota2.json` — копії
+/// `backend/database/seeds/dota2.json`, де кожен герой уже має повну
+/// форму `HeroWithBuild`: мета, здібності, характеристики й `ai_build`.
 class MockHeroRepository implements HeroRepository {
   MockHeroRepository({AssetBundle? bundle, this.latency = const Duration(milliseconds: 500)})
       : _bundle = bundle ?? rootBundle;
@@ -22,26 +23,12 @@ class MockHeroRepository implements HeroRepository {
   @override
   Future<HeroDetails> fetchHero(int id) async {
     await Future<void>.delayed(latency);
-    final meta = await _json('assets/mocks/meta.json');
-    final seeds = await _json('assets/mocks/dota2.json');
-    final builds = await _json('assets/mocks/ai_builds.json');
-
-    Map<String, dynamic>? find(Object? list) => (list as List? ?? const [])
+    final seeds = jsonDecode(await _bundle.loadString('assets/mocks/dota2.json')) as Map<String, dynamic>;
+    final hero = (seeds['heroes'] as List? ?? const [])
         .cast<Map<String, dynamic>>()
         .where((h) => h['id'] == id)
         .firstOrNull;
-
-    final metaHero = find(meta['meta_heroes']);
-    final seedHero = find(seeds['heroes']);
-    if (metaHero == null && seedHero == null) throw HeroNotFoundException(id);
-
-    return HeroDetails.fromJson({
-      ...?seedHero,
-      ...?metaHero,
-      'ai_build': (builds['builds'] as Map<String, dynamic>?)?['$id'],
-    });
+    if (hero == null) throw HeroNotFoundException(id);
+    return HeroDetails.fromJson(hero);
   }
-
-  Future<Map<String, dynamic>> _json(String key) async =>
-      jsonDecode(await _bundle.loadString(key)) as Map<String, dynamic>;
 }

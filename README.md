@@ -9,7 +9,7 @@
 
 - **Team Lead & QA / Тестувальник:** Загальна архітектура, контроль стандартів розробки, Git-процеси, тестування API та клієнта, фінальний реліз і демо.
 - **Backend (API & Business Logic):** Розробка REST API, валідація, бізнес-логіка, інтеграція зі Swagger/OpenAPI.
-- **Backend (Database):** Проєктування схем БД, оптимізація індексів, підготовка сід-даних (Dota 2 / CS2), міграції.
+- **Backend (Database):** Проєктування схем БД, оптимізація індексів, підготовка сід-даних Dota 2, міграції.
 - **Frontend (Mobile):** Кросплатформений мобільний застосунок, UI/UX, інтеграція з API, кешування та підтримка офлайн-режиму.
 
 ---
@@ -37,7 +37,7 @@ hakatone/
 
 ---
 
-##  Швидкий старт для кожного учасника
+##  Старт для кожного учасника
 
 1. **Мобільному розробнику:** Почніть з вивчення [mobile/README.md](mobile/README.md). Ви вже маєте готові мокові дані в [backend/database/seeds](backend/database/seeds/) і можете верстати екрани прямо зараз!
 2. **Розробнику БД:** Ознайомтеся з [docs/DATABASE_ERD.md](docs/DATABASE_ERD.md) та застосуйте [backend/database/schema.sql](backend/database/schema.sql).
@@ -54,4 +54,4 @@ hakatone/
    - `feature/mobile-catalog-ui`
    - `feature/backend-games-api`
    - `feature/db-seeds-init`
-4. Злиття тільки через Pull Request після перевірки Тімлідом/QA.
+4. Злиття тільки через Pull Request після перевірки Тімлідом.

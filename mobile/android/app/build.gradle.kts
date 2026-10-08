@@ -29,6 +29,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Плагін автооновлення ota_update використовує нові Java API, тож потрібен desugaring.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -77,4 +79,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Та сама версія, що в ota_update.
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

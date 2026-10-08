@@ -62,6 +62,54 @@ class AppDatabase {
     };
   }
 
+  /// Inserts or updates OpenDota heroes in one transaction and returns how many were written.
+  /// Fields OpenDota doesn't provide (bio, ai_summary) and abilities/ai_builds are kept.
+  int upsertHeroes(List<Map<String, Object?>> heroes) {
+    _transaction(() {
+      for (final h in heroes) {
+        _db.execute(
+          'INSERT INTO heroes (id, name, primary_attr, attack_type, win_rate, pick_rate, tier, '
+          'roles, avatar_url, stats) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) '
+          'ON CONFLICT(id) DO UPDATE SET name = excluded.name, primary_attr = excluded.primary_attr, '
+          'attack_type = excluded.attack_type, win_rate = excluded.win_rate, '
+          'pick_rate = excluded.pick_rate, tier = excluded.tier, roles = excluded.roles, '
+          'avatar_url = excluded.avatar_url, stats = excluded.stats, '
+          // No updated_at column: created_at doubles as the last-sync time shown in /api/meta/dota.
+          'created_at = CURRENT_TIMESTAMP',
+          [
+            h['id'], h['name'], h['primary_attr'], h['attack_type'], h['win_rate'], h['pick_rate'],
+            h['tier'], _encodeJson(h['roles']), h['avatar_url'], _encodeJson(h['stats']),
+          ],
+        );
+      }
+    });
+    return heroes.length;
+  }
+
+  /// Hero id -> name, e.g. to label matchups.
+  Map<int, String> heroNames() => {
+        for (final row in _db.select('SELECT id, name FROM heroes')) row['id'] as int: row['name'] as String,
+      };
+
+  /// Stores an AI analysis: the summary goes to heroes, the build to ai_builds (one per hero).
+  void saveAnalysis(
+    int heroId, {
+    required String summary,
+    required List<String> skillOrder,
+    required List<String> coreItems,
+    required String tactics,
+  }) {
+    _transaction(() {
+      _db.execute('UPDATE heroes SET ai_summary = ? WHERE id = ?', [summary, heroId]);
+      _db.execute(
+        'INSERT INTO ai_builds (hero_id, skill_order, core_items, tactics) VALUES (?, ?, ?, ?) '
+        'ON CONFLICT(hero_id) DO UPDATE SET skill_order = excluded.skill_order, '
+        'core_items = excluded.core_items, tactics = excluded.tactics, updated_at = CURRENT_TIMESTAMP',
+        [heroId, jsonEncode(skillOrder), jsonEncode(coreItems), tactics],
+      );
+    });
+  }
+
   Map<String, Object?> _metaHero(Row row) => {
         'id': row['id'],
         'name': row['name'],

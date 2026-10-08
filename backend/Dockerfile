@@ -15,6 +15,10 @@ RUN dart build cli --target bin/server.dart -o output
 FROM scratch
 COPY --from=build /runtime/ /
 COPY --from=build /app/output/bundle/ /app/
+# schema.sql and seeds are read at runtime from database/ relative to the working directory;
+# the SQLite file (DB_PATH, default mangodata.db) is created there too.
+COPY --from=build /app/database/ /app/database/
+WORKDIR /app
 
 # Start server.
 EXPOSE 8080

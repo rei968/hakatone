@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dota_builds/features/meta/domain/hero_attribute.dart';
+import 'package:dota_builds/features/meta/domain/meta_insights.dart';
 import 'package:dota_builds/features/meta/domain/meta_report.dart';
 import 'package:dota_builds/features/meta/domain/tier.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,6 +47,31 @@ void main() {
     expect([for (final (tier, _) in groups) tier], [Tier.a, Tier.c, Tier.none]);
     expect([for (final h in groups.first.$2) h.name], ['High A', 'Low A']);
     expect(groups[1].$2.single.aiSummary, isNull, reason: 'порожня підказка не показується');
+  });
+
+  test('тиждень: найкращий, найгірший, зліт і падіння, популярні', () {
+    final report = MetaReport.fromJson({
+      'patch': '7.41',
+      'rank': 'divine',
+      'total_matches': 396740,
+      'meta_heroes': [
+        {'id': 1, 'name': 'A', 'win_rate': 55.1, 'pick_rate': 12.9, 'win_rate_delta': 1.8, 'primary_attr': 'str', 'tier': 'S'},
+        {'id': 2, 'name': 'B', 'win_rate': 44.2, 'pick_rate': 3.0, 'win_rate_delta': -0.9, 'primary_attr': 'agi', 'tier': 'C'},
+        {'id': 3, 'name': 'C', 'win_rate': 60.0, 'pick_rate': 0.2, 'win_rate_delta': 3.4, 'primary_attr': 'int', 'tier': 'S'},
+        {'id': 4, 'name': 'D', 'win_rate': 50.0, 'pick_rate': 20.0, 'win_rate_delta': -2.9, 'primary_attr': 'all', 'tier': 'A'},
+      ],
+    });
+    final insights = MetaInsights.of(report);
+    expect(insights.best?.name, 'A', reason: 'C має замалу вибірку');
+    expect(insights.worst?.name, 'B');
+    expect(insights.risers.first.name, 'C');
+    expect(insights.fallers.first.name, 'D');
+    expect(insights.popular.first.name, 'D');
+    expect(report.totalMatches, 396740);
+
+    expect([for (final h in queryHeroes(report.heroes, sort: MetaSort.winRate)) h.name], ['C', 'A', 'D', 'B']);
+    expect([for (final h in queryHeroes(report.heroes)) h.name], ['C', 'A', 'D', 'B'], reason: 'S, S, A, C');
+    expect([for (final h in queryHeroes(report.heroes, search: ' b ')) h.name], ['B']);
   });
 
   test('updated_at: null від бекенду без героїв не ламає розбір', () {

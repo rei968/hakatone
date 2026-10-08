@@ -6,7 +6,6 @@ import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_context.dart';
-import '../../../../core/widgets/ai_text.dart';
 import '../../domain/meta_report.dart';
 import '../../domain/tier.dart';
 import 'hero_avatar.dart';
@@ -118,115 +117,118 @@ class TierHeader extends StatelessWidget {
   }
 }
 
-/// Рядок героя: аватар, ім’я, атрибут і ролі, вінрейт; під ними на всю
-/// ширину AI-підказка, щоб не тиснулась між ім’ям і вінрейтом.
-class MetaHeroRow extends StatelessWidget {
-  const MetaHeroRow({super.key, required this.hero, this.flash = false});
+/// Колір вінрейту: від 52 % — танго, до 48 % — фласка.
+Color winRateColor(BuildContext context, double winRate) {
+  final colors = context.colors;
+  if (winRate >= WinRate.good) return colors.success;
+  if (winRate <= WinRate.bad) return colors.danger;
+  return Theme.of(context).colorScheme.onSurface;
+}
+
+/// Зміна за тиждень: «+1,8» танго, «−0,9» фласка.
+class DeltaText extends StatelessWidget {
+  const DeltaText(this.delta, {super.key, this.style});
+
+  final double delta;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final color = delta > 0.05 ? colors.success : delta < -0.05 ? colors.danger : colors.textMuted;
+    return Text(Fmt.delta(delta), style: (style ?? context.text.labelSmall)?.copyWith(color: color));
+  }
+}
+
+/// Рядок таблиці мети (як на Dotabuff): герой, тір і атрибут, вінрейт зі смужкою, пікрейт.
+class MetaTableRow extends StatelessWidget {
+  const MetaTableRow({super.key, required this.hero});
 
   final MetaHero hero;
-  final bool flash;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final m = context.metrics;
     final attribute = hero.primaryAttribute;
-    final roles = hero.roles.take(2).join(', ');
-    final subtitle = [if (attribute != null) attribute.label, if (roles.isNotEmpty) roles].join(' · ');
-    final narrow = MediaQuery.sizeOf(context).width < 340;
-
-    final row = InkWell(
-      onTap: () => context.push(AppRoutes.hero(hero.id)),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(m.space3, 14, m.space3, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HeroAvatar(name: hero.name, attribute: attribute, url: hero.avatarUrl),
-                SizedBox(width: m.space3),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        hero.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w600, fontVariations: wght(FontWeight.w600)),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: attributeColor(colors, attribute),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              subtitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: context.text.bodySmall?.copyWith(color: colors.textMuted),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: m.space3),
-                WinRate(winRate: hero.winRate, pickRate: hero.pickRate, showPickRate: !narrow),
-              ],
-            ),
-            if (hero.aiSummary case final summary?)
-              Padding(
-                padding: EdgeInsets.only(left: m.thumb + m.space3, top: m.space2),
-                child: AiText(summary, maxLines: narrow ? 1 : 2),
-              ),
-          ],
-        ),
-      ),
-    );
-
+    final label = context.text.labelSmall!;
+    final barShare = ((hero.winRate - 40) / 20).clamp(0.04, 1.0);
     return Semantics(
       button: true,
-      label: [
-        hero.name,
-        if (attribute != null) attribute.label.toLowerCase(),
-        'вінрейт ${Fmt.percent(hero.winRate)}',
-        'пікрейт ${Fmt.percent(hero.pickRate)}',
-        if (hero.aiSummary != null) 'Підказка AI: ${hero.aiSummary}',
-      ].join(', '),
+      label: '${hero.name}, ${hero.tier.title}, вінрейт ${Fmt.percent(hero.winRate)}, пікрейт ${Fmt.percent(hero.pickRate)}',
       excludeSemantics: true,
-      child: flash ? _Flash(child: row) : row,
-    );
-  }
-}
-
-/// Один спалах дасту 12 % → 0 за 1200 ms (стан «Щойно оновлено»).
-class _Flash extends StatelessWidget {
-  const _Flash({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    if (MediaQuery.disableAnimationsOf(context)) return child;
-    final dust = context.colors.dust;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.12, end: 0),
-      duration: const Duration(milliseconds: 1200),
-      curve: Curves.easeOut,
-      builder: (context, alpha, child) => ColoredBox(color: dust.withValues(alpha: alpha), child: child),
-      child: child,
+      child: InkWell(
+        onTap: () => context.push(AppRoutes.hero(hero.id)),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: m.space3, vertical: 10),
+          child: Row(
+            children: [
+              HeroAvatar(name: hero.name, attribute: attribute, url: hero.avatarUrl, size: 40),
+              SizedBox(width: m.space3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hero.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w600, fontVariations: wght(FontWeight.w600)),
+                    ),
+                    Text.rich(
+                      TextSpan(children: [
+                        TextSpan(text: hero.tier.letter, style: label.copyWith(color: tierColor(colors, hero.tier))),
+                        if (attribute != null) TextSpan(text: ' · ${attribute.label}'),
+                      ]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.text.bodySmall?.copyWith(color: colors.textMuted),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: m.space2),
+              SizedBox(
+                width: 60,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      Fmt.percent(hero.winRate),
+                      style: label.copyWith(fontSize: 14, height: 18 / 14, color: winRateColor(context, hero.winRate)),
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: SizedBox(
+                        width: 48,
+                        height: 3,
+                        child: Stack(
+                          children: [
+                            ColoredBox(color: colors.surface3, child: const SizedBox.expand()),
+                            FractionallySizedBox(
+                              widthFactor: barShare,
+                              child: ColoredBox(color: winRateColor(context, hero.winRate), child: const SizedBox.expand()),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 52,
+                child: Text(
+                  Fmt.percent(hero.pickRate),
+                  textAlign: TextAlign.end,
+                  style: label.copyWith(fontWeight: FontWeight.w500, fontVariations: wght(FontWeight.w500), color: colors.textMuted),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

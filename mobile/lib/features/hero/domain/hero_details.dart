@@ -46,24 +46,140 @@ class Ability {
       };
 }
 
-/// `HeroWithBuild.ai_build` — білд, який згенерував Gemini.
+/// Талант з `ai_build.talents`: рівень 10/15/20/25 і бік дерева, як у грі.
+@immutable
+class Talent {
+  const Talent({required this.level, required this.side, required this.name});
+
+  static Talent? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final level = (json['level'] as num?)?.toInt();
+    final side = (json['side'] as String?)?.trim().toUpperCase();
+    final name = (json['name'] as String?)?.trim();
+    if (level == null || (side != 'L' && side != 'R') || name == null || name.isEmpty) return null;
+    return Talent(level: level, side: side!, name: name);
+  }
+
+  final int level;
+
+  /// `L` або `R`.
+  final String side;
+  final String name;
+
+  Map<String, dynamic> toJson() => {'level': level, 'side': side, 'name': name};
+}
+
+/// Ситуативний предмет від AI і коротко, проти чого він.
+@immutable
+class SituationalItem {
+  const SituationalItem({required this.name, required this.reason});
+
+  static SituationalItem? fromJson(Object? json) {
+    final name = json is Map ? (json['name'] as String?)?.trim() : (json is String ? json.trim() : null);
+    if (name == null || name.isEmpty) return null;
+    return SituationalItem(name: name, reason: json is Map ? (json['reason'] as String? ?? '').trim() : '');
+  }
+
+  final String name;
+  final String reason;
+
+  Map<String, dynamic> toJson() => {'name': name, 'reason': reason};
+}
+
+enum SkillStepKind { ability, talentLeft, talentRight, none }
+
+/// Що качається на одному рівні.
+@immutable
+class SkillStep {
+  const SkillStep(this.kind, [this.ability]);
+
+  factory SkillStep.parse(String raw) => switch (raw.trim().toUpperCase()) {
+        'L' => const SkillStep(SkillStepKind.talentLeft),
+        'R' => const SkillStep(SkillStepKind.talentRight),
+        '' || '-' || '—' => const SkillStep(SkillStepKind.none),
+        _ => SkillStep(SkillStepKind.ability, raw.trim()),
+      };
+
+  final SkillStepKind kind;
+
+  /// Назва здібності для [SkillStepKind.ability].
+  final String? ability;
+
+  bool get isTalent => kind == SkillStepKind.talentLeft || kind == SkillStepKind.talentRight;
+}
+
+/// `HeroWithBuild.ai_build` — білд, який згенерував Gemini. Нові поля (таланти,
+/// таймінги, ситуативні предмети) необов’язкові: старі білди їх не мають.
 @immutable
 class AiBuild {
-  const AiBuild({required this.skillOrder, required this.coreItems, required this.tactics});
+  const AiBuild({
+    required this.skillOrder,
+    required this.coreItems,
+    required this.tactics,
+    this.talents = const [],
+    this.itemTimings = const {},
+    this.situationalItems = const [],
+  });
 
-  factory AiBuild.fromJson(Map<String, dynamic> json) => AiBuild(
-        skillOrder: [for (final s in json['skill_order'] as List? ?? const []) s as String],
-        coreItems: [for (final s in json['core_items'] as List? ?? const []) s as String],
-        tactics: (json['tactics'] as String? ?? '').trim(),
-      );
+  factory AiBuild.fromJson(Map<String, dynamic> json) {
+    String? name(Object? value) => switch (value) {
+          final String s => s,
+          final Map m => (m['name'] ?? m['ability']) as String?,
+          _ => null,
+        };
+    final timings = <String, int>{
+      for (final MapEntry(:key, :value) in (json['item_timings'] as Map? ?? const {}).entries)
+        if (value is num) '$key': value.toInt(),
+    };
+    // Запасний формат: core_items об’єктами з таймінгом усередині.
+    for (final item in json['core_items'] as List? ?? const []) {
+      if (item is Map && item['name'] is String && item['timing_sec'] is num) {
+        timings.putIfAbsent(item['name'] as String, () => (item['timing_sec'] as num).toInt());
+      }
+    }
+    return AiBuild(
+      skillOrder: [for (final s in json['skill_order'] as List? ?? const []) name(s) ?? '-'],
+      coreItems: [for (final s in json['core_items'] as List? ?? const []) if (name(s) case final n?) n],
+      tactics: (json['tactics'] as String? ?? '').trim(),
+      talents: [for (final t in json['talents'] as List? ?? const []) if (Talent.fromJson(t) case final talent?) talent]
+        ..sort((a, b) => b.level.compareTo(a.level)),
+      itemTimings: timings,
+      situationalItems: [
+        for (final s in json['situational_items'] as List? ?? const [])
+          if (SituationalItem.fromJson(s) case final item?) item,
+      ],
+    );
+  }
 
   final List<String> skillOrder;
   final List<String> coreItems;
   final String tactics;
 
+  /// Від 25-го рівня до 10-го, як дерево талантів у грі.
+  final List<Talent> talents;
+
+  /// Назва предмета → середній таймінг покупки в секундах (усі ранги).
+  final Map<String, int> itemTimings;
+  final List<SituationalItem> situationalItems;
+
+  List<SkillStep> get steps => [for (final s in skillOrder) SkillStep.parse(s)];
+
+  Duration? timingOf(String item) {
+    final seconds = itemTimings[item] ??
+        itemTimings.entries.where((e) => e.key.toLowerCase() == item.toLowerCase()).firstOrNull?.value;
+    return seconds == null ? null : Duration(seconds: seconds);
+  }
+
   bool get isEmpty => skillOrder.isEmpty && coreItems.isEmpty && tactics.isEmpty;
 
-  Map<String, dynamic> toJson() => {'skill_order': skillOrder, 'core_items': coreItems, 'tactics': tactics};
+  Map<String, dynamic> toJson() => {
+        'skill_order': skillOrder,
+        'core_items': coreItems,
+        'tactics': tactics,
+        'talents': [for (final t in talents) t.toJson()],
+        'item_timings': itemTimings,
+        'situational_items': [for (final s in situationalItems) s.toJson()],
+      };
 }
 
 /// Базові характеристики з сідів (`stats`). У `openapi.yaml` їх поки немає,

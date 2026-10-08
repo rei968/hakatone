@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dota_builds/core/dota/rank.dart';
 import 'package:dota_builds/core/network/api_client.dart';
 import 'package:dota_builds/core/storage/app_storage.dart';
 import 'package:dota_builds/features/auth/application/auth_controller.dart';
-import 'package:dota_builds/features/auth/data/auth_repository.dart';
 import 'package:dota_builds/features/auth/data/session_store.dart';
-import 'package:dota_builds/features/auth/domain/auth_session.dart';
+import 'package:dota_builds/features/auth/domain/steam_session.dart';
+import 'package:dota_builds/features/profile/application/profile_providers.dart';
 import 'package:dota_builds/features/hero/application/hero_providers.dart';
 import 'package:dota_builds/features/hero/data/hero_repository.dart';
 import 'package:dota_builds/features/hero/domain/hero_details.dart';
@@ -28,7 +29,7 @@ class SwitchableMeta implements MetaRepository {
   int calls = 0;
 
   @override
-  Future<MetaReport> fetchMeta() async {
+  Future<MetaReport> fetchMeta({Rank rank = Rank.all}) async {
     calls++;
     if (failure != null) throw failure!;
     return seedMeta();
@@ -40,7 +41,7 @@ class SwitchableHeroes implements HeroRepository {
   Object? failure;
 
   @override
-  Future<HeroDetails> fetchHero(int id) async {
+  Future<HeroDetails> fetchHero(int id, {Rank rank = Rank.all}) async {
     if (failure != null) throw failure!;
     return _inner.fetchHero(id);
   }
@@ -77,14 +78,14 @@ void main() {
     test('сесія переживає збереження, пошкоджена — стирається', () async {
       final store = MemoryKeyValueStore();
       final sessions = KeyValueSessionStore(store);
-      const session = AuthSession(token: 'jwt', user: AuthUser(id: 'usr_1', email: 'a@b.co'));
+      const session = SteamSession(steamId64: '76561198047011640', personaName: 'dima');
 
       await sessions.write(session);
-      expect((await sessions.read())?.user.email, 'a@b.co');
+      expect((await sessions.read())?.accountId, 86745912);
 
-      await store.write('session', 'oops');
+      await store.write('steam_session', 'oops');
       expect(await sessions.read(), isNull);
-      expect(store.read('session'), isNull);
+      expect(store.read('steam_session'), isNull);
     });
 
     test('HiveKeyValueStore працює на справжньому Hive', () async {
@@ -199,16 +200,13 @@ void main() {
     ProviderContainer start() {
       final c = ProviderContainer(overrides: [
         appStorageProvider.overrideWithValue(storage),
-        authRepositoryProvider.overrideWithValue(MockAuthRepository(latency: Duration.zero)),
+        profileRepositoryProvider.overrideWithValue(FakeProfileRepository()),
       ]);
       addTearDown(c.dispose);
       return c;
     }
 
-    await start().read(authControllerProvider.notifier).signIn(
-          email: MockAuthRepository.demoEmail,
-          password: MockAuthRepository.demoPassword,
-        );
+    await start().read(authControllerProvider.notifier).signIn('76561198047011640');
 
     final relaunched = start();
     relaunched.read(authControllerProvider);

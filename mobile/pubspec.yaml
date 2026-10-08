@@ -17,6 +17,7 @@ dependencies:
   hive_ce: ^2.20.2
   hive_ce_flutter: ^2.4.0
   intl: any
+  webview_flutter: ^4.13.0
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +29,8 @@ flutter:
   assets:
     # Копії backend/database/seeds (Flutter не бачить файлів поза mobile/).
     - assets/mocks/
+    # Довідники «назва → іконка» з OpenDota: tool/generate_dota_assets.dart.
+    - assets/data/
   # Змінні шрифти з github.com/google/fonts (OFL, ліцензії поруч у assets/fonts).
   # Вбудовані, щоб застосунок виглядав однаково й без інтернету.
   fonts:

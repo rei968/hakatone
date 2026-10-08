@@ -4,14 +4,14 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:dota_builds/core/network/api_client.dart';
-import 'package:dota_builds/features/auth/application/auth_controller.dart';
-import 'package:dota_builds/features/auth/data/api_auth_repository.dart';
-import 'package:dota_builds/features/auth/data/auth_repository.dart';
-import 'package:dota_builds/features/auth/domain/auth_session.dart';
+import 'package:dota_builds/core/dota/rank.dart';
+import 'package:dota_builds/features/auth/data/steam_openid.dart';
+import 'package:dota_builds/features/auth/domain/steam_session.dart';
+import 'package:dota_builds/features/profile/data/profile_repository.dart';
+import 'package:dota_builds/features/profile/domain/player.dart';
 import 'package:dota_builds/features/hero/data/api_hero_repository.dart';
 import 'package:dota_builds/features/hero/domain/hero_details.dart';
 import 'package:dota_builds/features/meta/data/api_meta_repository.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Відповідає замість сервера. `null` — немає мережі.
@@ -78,94 +78,90 @@ void main() {
     });
   });
 
-  group('ApiAuthRepository', () {
-    final ok = {
-      'token': 'jwt-123',
-      'user': {'id': 'usr_1', 'email': 'player@example.com'},
-    };
+  test('ранг іде в запит параметром rank, «усі ранги» — без нього', () async {
+    final adapter = FakeAdapter((r) => (200, seed('meta.json')));
+    final repo = ApiMetaRepository(dioWith(adapter));
+    await repo.fetchMeta();
+    await repo.fetchMeta(rank: Rank.divine);
+    expect(adapter.requests[0].queryParameters, isEmpty);
+    expect(adapter.requests[1].queryParameters, {'rank': 'divine'});
+  });
 
-    Future<AuthFailure> failureOf(Future<AuthSession> call) async {
-      try {
-        await call;
-      } on AuthException catch (e) {
-        return e.failure;
-      }
-      fail('очікували AuthException');
-    }
-
-    test('вхід: 200 → сесія, 401 → невірні дані', () async {
-      final adapter = FakeAdapter((r) {
-        final body = r.data as Map;
-        return body['password'] == 'secret123' ? (200, ok) : (401, {'error': 'invalid_credentials'});
-      });
-      final repo = ApiAuthRepository(dioWith(adapter));
-
-      final session = await repo.login(email: 'player@example.com', password: 'secret123');
-      expect(session.token, 'jwt-123');
-      expect(adapter.requests.single.path, '/api/auth/login');
-      expect(await failureOf(repo.login(email: 'player@example.com', password: 'nope')), AuthFailure.invalidCredentials);
+  group('Steam', () {
+    test('Steam ID з різних форматів', () {
+      expect(SteamIds.parse('76561198047011640'), '76561198047011640');
+      expect(SteamIds.parse('86745912'), '76561198047011640');
+      expect(SteamIds.parse('https://steamcommunity.com/profiles/76561198047011640/'), '76561198047011640');
+      expect(SteamIds.parse('https://www.opendota.com/players/86745912'), '76561198047011640');
+      expect(SteamIds.parse('https://steamcommunity.com/id/vanity'), isNull);
+      expect(SteamIds.parse('abc'), isNull);
+      expect(const SteamSession(steamId64: '76561198047011640').accountId, 86745912);
     });
 
-    test('реєстрація: 201 → сесія, коди 400 з бекенду → окремі помилки', () async {
-      var reply = (201, ok as Object?);
-      final repo = ApiAuthRepository(dioWith(FakeAdapter((_) => reply)));
+    Uri callback(SteamOpenId openId, {String id = '76561198047011640'}) => Uri.parse(openId.returnTo).replace(queryParameters: {
+          'openid.ns': 'http://specs.openid.net/auth/2.0',
+          'openid.mode': 'id_res',
+          'openid.op_endpoint': SteamOpenId.endpoint,
+          'openid.claimed_id': 'https://steamcommunity.com/openid/id/$id',
+          'openid.identity': 'https://steamcommunity.com/openid/id/$id',
+          'openid.return_to': openId.returnTo,
+          'openid.sig': 'sig',
+        });
 
-      expect((await repo.register(email: 'new@example.com', password: 'secret123')).user.id, 'usr_1');
+    test('підпис перевіряється в Steam: is_valid:true → Steam ID', () async {
+      final adapter = FakeAdapter((r) => (200, 'ns:http://specs.openid.net/auth/2.0\nis_valid:true\n'));
+      final openId = SteamOpenId(dioWith(adapter), realm: 'https://hakatone.onrender.com');
+      expect(openId.loginUri.queryParameters['openid.return_to'], 'https://hakatone.onrender.com/auth/steam/return');
 
-      const codes = {
-        'email_taken': AuthFailure.emailTaken,
-        'invalid_email': AuthFailure.invalidEmail,
-        'password_too_short': AuthFailure.passwordTooShort,
-        'password_too_long': AuthFailure.passwordTooLong,
-        'invalid_body': AuthFailure.invalidData,
-      };
-      for (final MapEntry(key: code, value: failure) in codes.entries) {
-        reply = (400, {'error': code});
-        expect(await failureOf(repo.register(email: 'a@b.co', password: 'secret123')), failure, reason: code);
-      }
+      expect(await openId.verify(callback(openId)), '76561198047011640');
+      final check = adapter.requests.single;
+      expect(check.uri.toString(), SteamOpenId.endpoint);
+      expect((check.data as Map)['openid.mode'], 'check_authentication');
     });
 
-    test('немає мережі → network, 5xx → server', () async {
-      final offline = ApiAuthRepository(dioWith(FakeAdapter((_) => null)));
-      expect(await failureOf(offline.login(email: 'a@b.co', password: 'x')), AuthFailure.network);
-
-      final down = ApiAuthRepository(dioWith(FakeAdapter((_) => (502, null))));
-      expect(await failureOf(down.login(email: 'a@b.co', password: 'x')), AuthFailure.server);
+    test('Steam не підтвердив або гравець скасував — помилка', () async {
+      final openId = SteamOpenId(dioWith(FakeAdapter((_) => (200, 'is_valid:false'))), realm: 'https://hakatone.onrender.com');
+      await expectLater(openId.verify(callback(openId)), throwsA(isA<SteamLoginException>()));
+      final cancelled = Uri.parse(openId.returnTo).replace(queryParameters: {'openid.mode': 'cancel'});
+      await expectLater(
+        openId.verify(cancelled),
+        throwsA(isA<SteamLoginException>().having((e) => e.failure, 'failure', SteamLoginFailure.cancelled)),
+      );
     });
   });
 
-  group('токен', () {
-    late FakeAdapter adapter;
-    late ProviderContainer container;
+  group('OpenDota', () {
+    test('профіль, медаль і матчі за період', () async {
+      final adapter = FakeAdapter((r) => switch (r.uri.path) {
+            '/api/players/86745912' => (200, {
+                'profile': {'personaname': 'dima', 'avatarfull': 'https://a/b.jpg'},
+                'rank_tier': 73,
+              }),
+            '/api/players/86745912/wl' => (200, {'win': 2500, 'lose': 2312}),
+            '/api/players/86745912/matches' => (200, [
+                {'match_id': 1, 'player_slot': 0, 'radiant_win': true, 'hero_id': 42, 'kills': 12, 'deaths': 3, 'assists': 9, 'gold_per_min': 600, 'xp_per_min': 700, 'duration': 2292, 'start_time': 1790000000},
+                {'match_id': 2, 'player_slot': 130, 'radiant_win': true, 'hero_id': 8, 'kills': 4, 'deaths': 7, 'assists': 6, 'gold_per_min': 420, 'xp_per_min': 500, 'duration': 2690, 'start_time': 1789990000},
+              ]),
+            _ => (404, null),
+          });
+      final repo = OpenDotaProfileRepository(dioWith(adapter));
 
-    setUp(() async {
-      adapter = FakeAdapter((r) => r.path == '/admin/sync' ? (401, null) : (200, {'status': 'ok'}));
-      container = ProviderContainer(overrides: [
-        authRepositoryProvider.overrideWithValue(MockAuthRepository(latency: Duration.zero)),
-      ]);
-      container.read(dioProvider).httpClientAdapter = adapter;
-      await container.read(authControllerProvider.notifier).signIn(
-            email: MockAuthRepository.demoEmail,
-            password: MockAuthRepository.demoPassword,
-          );
-    });
+      final profile = await repo.fetchProfile(86745912);
+      expect(profile.name, 'dima');
+      expect(profile.medal, 'Divine 3');
+      expect(profile.totalMatches, 4812);
 
-    tearDown(() => container.dispose());
+      final matches = await repo.fetchMatches(86745912, ProfilePeriod.week);
+      final query = adapter.requests.last.uri.query;
+      expect(query, contains('date=7'));
+      expect(query, contains('project=gold_per_min'));
+      expect([for (final m in matches) m.won], [true, false], reason: 'player_slot ≥ 128 — Dire');
 
-    test('йде лише в захищені запити', () async {
-      final dio = container.read(dioProvider);
-      await dio.get<Object>('/api/meta/dota');
-      await dio.get<Object>('/api/health', options: authorized());
-
-      expect(adapter.requests[0].headers['Authorization'], isNull);
-      expect(adapter.requests[1].headers['Authorization'], startsWith('Bearer mock-token-'));
-    });
-
-    test('401 на захищеному запиті закриває сесію', () async {
-      final dio = container.read(dioProvider);
-      await expectLater(dio.post<Object>('/admin/sync', options: authorized()), throwsA(isA<DioException>()));
-      await Future<void>.delayed(Duration.zero);
-      expect(container.read(authControllerProvider).status, AuthStatus.signedOut);
+      final summary = ProfileSummary.of(matches);
+      expect(summary.wins, 1);
+      expect(summary.kda, closeTo((8 + 7.5) / 5, 0.01));
+      expect(summary.gpm, 510);
+      expect(summary.heroPool.first.games, 1);
     });
   });
 }

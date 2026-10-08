@@ -16,8 +16,7 @@
 | `APP_NAME` | `MangoDota` | Назва під іконкою |
 | `APPLICATION_ID` | `com.kakatone.mangodota` | Ідентифікатор застосунку. Після першого встановлення не змінювати |
 | `API_BASE_URL` | `https://hakatone.onrender.com` | Бекенд команди. Для локального сервера: емулятор — `http://10.0.2.2:8080`, телефон — `http://<IP ноутбука>:8080` |
-| `USE_MOCKS` | `false` | `true` — мета й картки з `assets/mocks` без мережі |
-| `MOCK_AUTH` | `false` | `true` — вхід на моках (`player@example.com` / `secret123`) |
+| `USE_MOCKS` | `false` | `true` — мета й картки з `assets/mocks` без мережі. Профіль завжди з OpenDota |
 
 Якщо `API_BASE_URL` починається з `http://`, Gradle сам дозволяє незашифрований трафік (`usesCleartextTraffic`). Для `https` він вимкнений.
 
@@ -39,8 +38,12 @@ flutter build apk --release --dart-define-from-file=config/app.json
 ## Перед демо
 
 - Бекенд на Render засинає після ~15 хв без запитів. За кілька хвилин до демо відкрийте застосунок або `https://hakatone.onrender.com/api/health`, щоб він прокинувся.
-- Після перезапуску сервера зареєстровані акаунти зникають. Просто зареєструйтеся знову.
+- Вхід через Steam відкриває сторінку Steam у WebView застосунку. Якщо Steam недоступний, у профілі є «Увійти за Steam ID або посиланням».
 - Офлайн-демо: відкрийте мету й картку Pudge з інтернетом, потім увімкніть режим польоту — застосунок покаже збережені дані.
+
+## Довідники іконок
+
+Назви предметів і здібностей з білдів перетворюються на картинки Steam CDN через `assets/data/*.json`. Після великого патча оновіть їх: `dart run tool/generate_dota_assets.dart` (з `mobile/`).
 
 ## Іконки
 

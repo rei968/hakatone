@@ -3,51 +3,66 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/auth_controller.dart';
-import '../../features/auth/presentation/auth_screen.dart';
+import '../../features/auth/presentation/steam_login_screen.dart';
 import '../../features/hero/presentation/hero_screen.dart';
+import '../../features/home/presentation/home_screen.dart';
 import '../../features/meta/presentation/meta_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
+import '../widgets/app_shell.dart';
 import '../widgets/not_found_screen.dart';
 import 'app_routes.dart';
 
-/// Потік екранів (docs/design/02-auth.html, «Потік екранів»): поки сесія
-/// невідома — splash, без сесії — вхід або реєстрація, із сесією — мета.
+final _rootKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
+/// Splash, поки сесія невідома. Новий гравець бачить «Увійти через Steam» один раз,
+/// далі — три вкладки. Мета й герої відкриті й гостям, профіль просить увійти.
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authStatus = ValueNotifier<AuthStatus>(ref.read(authControllerProvider).status);
-  ref.listen(authControllerProvider, (_, next) => authStatus.value = next.status);
+  final auth = ValueNotifier<AuthState>(ref.read(authControllerProvider));
+  ref.listen(authControllerProvider, (_, next) => auth.value = next);
 
   final router = GoRouter(
+    navigatorKey: _rootKey,
     initialLocation: AppRoutes.splash,
-    refreshListenable: authStatus,
+    refreshListenable: auth,
     redirect: (context, state) {
       final location = state.matchedLocation;
       final onSplash = location == AppRoutes.splash;
-      final onAuth = location == AppRoutes.login || location == AppRoutes.register;
-      return switch (authStatus.value) {
+      final onLogin = location == AppRoutes.login;
+      final current = auth.value;
+      return switch (current.status) {
         AuthStatus.unknown => onSplash ? null : AppRoutes.splash,
-        AuthStatus.signedOut => onAuth ? null : AppRoutes.login,
-        AuthStatus.signedIn => (onSplash || onAuth) ? AppRoutes.meta : null,
+        AuthStatus.guest when onSplash => current.welcomed ? AppRoutes.home : AppRoutes.login,
+        AuthStatus.signedIn when onSplash => AppRoutes.home,
+        AuthStatus.signedIn when onLogin => AppRoutes.profile,
+        _ => null,
       };
     },
     routes: [
-      GoRoute(
-        path: AppRoutes.splash,
-        builder: (context, state) => const SplashScreen(),
-      ),
+      GoRoute(path: AppRoutes.splash, builder: (context, state) => const SplashScreen()),
       GoRoute(
         path: AppRoutes.login,
-        builder: (context, state) => AuthScreen(mode: AuthMode.login, draft: _draft(state)),
+        parentNavigatorKey: _rootKey,
+        builder: (context, state) => const SteamLoginScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.register,
-        builder: (context, state) => AuthScreen(mode: AuthMode.register, draft: _draft(state)),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => AppShell(shell: shell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.home, builder: (context, state) => const HomeScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.meta, builder: (context, state) => const MetaScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
+          ]),
+        ],
       ),
-      GoRoute(
-        path: AppRoutes.meta,
-        builder: (context, state) => const MetaScreen(),
-      ),
+      // Картка героя на весь екран, поверх нижнього меню.
       GoRoute(
         path: AppRoutes.heroPattern,
+        parentNavigatorKey: _rootKey,
         builder: (context, state) {
           final heroId = int.tryParse(state.pathParameters['heroId'] ?? '');
           return heroId == null ? const NotFoundScreen() : HeroScreen(heroId: heroId);
@@ -58,14 +73,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 
   ref.onDispose(() {
-    authStatus.dispose();
+    auth.dispose();
     router.dispose();
   });
   return router;
 });
-
-/// Email і пароль переносяться між входом і реєстрацією, щоб не вводити знову.
-AuthDraft? _draft(GoRouterState state) {
-  final extra = state.extra;
-  return extra is AuthDraft ? extra : null;
-}

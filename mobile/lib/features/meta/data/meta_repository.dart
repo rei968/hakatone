@@ -2,14 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
+import '../../../core/dota/rank.dart';
 import '../domain/meta_report.dart';
 
 /// `GET /api/meta/dota` з `docs/openapi.yaml`.
 abstract interface class MetaRepository {
-  Future<MetaReport> fetchMeta();
+  Future<MetaReport> fetchMeta({Rank rank = Rank.all});
 }
 
 /// Віддає `assets/mocks/meta.json` — копію `backend/database/seeds/meta.json`.
+/// Ранг моки не розрізняють.
 class MockMetaRepository implements MetaRepository {
   MockMetaRepository({AssetBundle? bundle, this.latency = const Duration(milliseconds: 600)})
       : _bundle = bundle ?? rootBundle;
@@ -18,7 +20,7 @@ class MockMetaRepository implements MetaRepository {
   final Duration latency;
 
   @override
-  Future<MetaReport> fetchMeta() async {
+  Future<MetaReport> fetchMeta({Rank rank = Rank.all}) async {
     await Future<void>.delayed(latency);
     final raw = await _bundle.loadString('assets/mocks/meta.json');
     return MetaReport.fromJson(jsonDecode(raw) as Map<String, dynamic>);

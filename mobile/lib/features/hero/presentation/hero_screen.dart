@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/dota/rank.dart';
 import '../../../core/format/formatters.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/router/app_routes.dart';
@@ -9,6 +10,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/widgets/ai_text.dart';
 import '../../../core/widgets/app_skeleton.dart';
+import '../../../core/widgets/controls.dart';
+import '../../../core/widgets/dota_icons.dart';
 import '../../../core/widgets/states.dart';
 import '../../meta/presentation/widgets/hero_avatar.dart';
 import '../../meta/presentation/widgets/tier_section.dart';
@@ -27,7 +30,7 @@ class HeroScreen extends ConsumerWidget {
     final card = ref.watch(heroCardProvider(heroId));
     final m = context.metrics;
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(actions: [const RankChip(), SizedBox(width: m.space4)]),
       body: card.when(
         // Потягнути вниз — запитати картку ще раз (наприклад, якщо AI-білд ще не був готовий).
         data: (c) => RefreshIndicator(
@@ -53,7 +56,7 @@ class HeroScreen extends ConsumerWidget {
   }
 }
 
-class _HeroBody extends StatelessWidget {
+class _HeroBody extends ConsumerWidget {
   const _HeroBody({required this.details, this.cachedAt, this.staleError});
 
   final HeroDetails details;
@@ -63,7 +66,8 @@ class _HeroBody extends StatelessWidget {
   final Object? staleError;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final rank = ref.watch(rankProvider);
     final m = context.metrics;
     final hero = details.hero;
     final aiBuild = details.aiBuild;
@@ -97,7 +101,20 @@ class _HeroBody extends StatelessWidget {
         SizedBox(height: m.space4),
         Row(
           children: [
-            Expanded(child: _Metric(label: 'Вінрейт', child: _WinRateValue(winRate: hero.winRate))),
+            Expanded(
+              child: _Metric(
+                label: rank == Rank.all ? 'Вінрейт' : 'Вінрейт · ${rank.short}',
+                child: Wrap(
+                  spacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  children: [
+                    _WinRateValue(winRate: hero.winRate),
+                    if (hero.winRateDelta case final delta?)
+                      Padding(padding: const EdgeInsets.only(bottom: 4), child: DeltaText(delta)),
+                  ],
+                ),
+              ),
+            ),
             SizedBox(width: m.space3),
             Expanded(
               child: _Metric(
@@ -120,7 +137,7 @@ class _HeroBody extends StatelessWidget {
         ],
         SizedBox(height: m.space6),
         if (aiBuild != null)
-          _AiBuildCard(aiBuild: aiBuild)
+          _AiBuildCard(aiBuild: aiBuild, heroId: hero.id)
         else
           // `ai_build: null` — AI не встиг або впав. Це не помилка: потягніть вниз пізніше.
           StatusBanner(
@@ -136,7 +153,7 @@ class _HeroBody extends StatelessWidget {
               children: [
                 for (var i = 0; i < details.abilities.length; i++) ...[
                   if (i > 0) const Divider(indent: 64),
-                  _AbilityRow(ability: details.abilities[i]),
+                  _AbilityRow(ability: details.abilities[i], heroId: hero.id),
                 ],
               ],
             ),
@@ -225,10 +242,9 @@ class _Header extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  const _Chip({required this.text, this.leading});
+  const _Chip({required this.text});
 
   final String text;
-  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +258,6 @@ class _Chip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (leading != null) ...[leading!, const SizedBox(width: 6)],
           Flexible(child: Text(text, style: context.text.bodySmall)),
         ],
       ),
@@ -306,17 +321,22 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-/// AI-білд кольором смоку: порядок прокачки, ключові предмети, тактика.
+/// AI-білд кольором смоку (ескізи v2): скілбілд іконками на 1–18 рівнях з талантами L/R,
+/// дерево талантів, ключові предмети зі стрілками й таймінгами, ситуативні предмети, тактика.
 class _AiBuildCard extends StatelessWidget {
-  const _AiBuildCard({required this.aiBuild});
+  const _AiBuildCard({required this.aiBuild, required this.heroId});
 
   final AiBuild aiBuild;
+  final int heroId;
 
   @override
   Widget build(BuildContext context) {
     final m = context.metrics;
     final colors = context.colors;
     final label = context.text.labelMedium?.copyWith(color: colors.textMuted);
+    final steps = aiBuild.steps;
+    final hasTimings = aiBuild.coreItems.any((item) => aiBuild.timingOf(item) != null);
+    final abilities = <String>{for (final s in steps) if (s.ability case final a?) a}.toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -338,58 +358,123 @@ class _AiBuildCard extends StatelessWidget {
               ],
             ),
           ),
-          if (aiBuild.skillOrder.isNotEmpty) ...[
+          if (steps.isNotEmpty) ...[
             SizedBox(height: m.space4),
-            Text('Порядок прокачки', style: label),
+            Text('Скілбілд · 1–${steps.length} рівень', style: label),
             SizedBox(height: m.space2),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (var i = 0; i < aiBuild.skillOrder.length; i++)
-                  Semantics(
-                    label: 'Рівень ${i + 1}: ${aiBuild.skillOrder[i]}',
-                    excludeSemantics: true,
-                    child: _Chip(
-                      text: aiBuild.skillOrder[i],
-                      leading: Text(
-                        '${i + 1}',
-                        style: context.text.labelSmall?.copyWith(color: colors.smoke),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-          if (aiBuild.coreItems.isNotEmpty) ...[
-            SizedBox(height: m.space4),
-            Text('Ключові предмети', style: label),
-            SizedBox(height: m.space2),
-            for (var i = 0; i < aiBuild.coreItems.length; i++)
-              Padding(
-                padding: EdgeInsets.only(bottom: m.space2),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(color: colors.mangoSoft, shape: BoxShape.circle),
-                      child: Text('${i + 1}', style: context.text.labelSmall?.copyWith(color: colors.mango)),
-                    ),
-                    SizedBox(width: m.space3),
+            for (var row = 0; row * 9 < steps.length; row++) ...[
+              if (row > 0) SizedBox(height: m.space2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var col = 0; col < 9; col++) ...[
+                    if (col > 0) const SizedBox(width: 4),
                     Expanded(
-                      child: Text(
-                        aiBuild.coreItems[i],
-                        style: context.text.bodyLarge?.copyWith(fontWeight: FontWeight.w600, fontVariations: wght(FontWeight.w600)),
-                      ),
+                      child: row * 9 + col < steps.length
+                          ? _SkillCell(step: steps[row * 9 + col], level: row * 9 + col + 1, heroId: heroId)
+                          : const SizedBox.shrink(),
                     ),
                   ],
+                ],
+              ),
+            ],
+            if (abilities.isNotEmpty) ...[
+              SizedBox(height: m.space2),
+              Text(abilities.join(' · '), style: context.text.bodySmall?.copyWith(color: colors.textMuted)),
+            ],
+          ],
+          if (aiBuild.talents.isNotEmpty) ...[
+            SizedBox(height: m.space4),
+            Text('Таланти', style: label),
+            SizedBox(height: m.space2),
+            for (final talent in aiBuild.talents)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Semantics(
+                  label: 'Рівень ${talent.level}: ${talent.side == 'L' ? 'лівий' : 'правий'} талант, ${talent.name}',
+                  excludeSemantics: true,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 24,
+                        child: Text('${talent.level}', style: context.text.labelSmall?.copyWith(color: colors.textMuted)),
+                      ),
+                      _SidePill(side: 'L', selected: talent.side == 'L'),
+                      const SizedBox(width: 4),
+                      _SidePill(side: 'R', selected: talent.side == 'R'),
+                      SizedBox(width: m.space2),
+                      Expanded(child: Text(talent.name, style: context.text.bodySmall)),
+                    ],
+                  ),
                 ),
               ),
           ],
-          if (aiBuild.tactics.isNotEmpty) ...[
+          if (aiBuild.coreItems.isNotEmpty) ...[
+            SizedBox(height: m.space4),
+            Text(hasTimings ? 'Ключові предмети · середній таймінг' : 'Ключові предмети', style: label),
             SizedBox(height: m.space2),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < aiBuild.coreItems.length; i++) ...[
+                    if (i > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Icon(Icons.chevron_right_rounded, size: 18, color: colors.textSubtle),
+                      ),
+                    _CoreItem(name: aiBuild.coreItems[i], timing: aiBuild.timingOf(aiBuild.coreItems[i])),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          if (aiBuild.situationalItems.isNotEmpty) ...[
+            SizedBox(height: m.space4),
+            Text('Ситуативні предмети', style: label),
+            SizedBox(height: m.space2),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final half = (constraints.maxWidth - m.space2) / 2;
+                return Wrap(
+                  spacing: m.space2,
+                  runSpacing: m.space3,
+                  children: [
+                    for (final item in aiBuild.situationalItems)
+                      SizedBox(
+                        width: constraints.maxWidth < 300 ? constraints.maxWidth : half,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ItemIcon(name: item.name, width: 36),
+                            SizedBox(width: m.space2),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: context.text.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontVariations: wght(FontWeight.w600)),
+                                  ),
+                                  if (item.reason.isNotEmpty)
+                                    Text(
+                                      item.reason,
+                                      style: context.text.bodySmall?.copyWith(color: Color.lerp(colors.textMuted, colors.smoke, 0.45)),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
+          if (aiBuild.tactics.isNotEmpty) ...[
+            SizedBox(height: m.space4),
             Text('Тактика', style: label),
             SizedBox(height: m.space2),
             AiText(aiBuild.tactics),
@@ -400,10 +485,132 @@ class _AiBuildCard extends StatelessWidget {
   }
 }
 
+/// Клітинка скілбілда: іконка здібності, L/R для таланту або «—», під нею номер рівня.
+class _SkillCell extends StatelessWidget {
+  const _SkillCell({required this.step, required this.level, required this.heroId});
+
+  final SkillStep step;
+  final int level;
+  final int heroId;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final description = switch (step.kind) {
+      SkillStepKind.ability => step.ability!,
+      SkillStepKind.talentLeft => 'лівий талант',
+      SkillStepKind.talentRight => 'правий талант',
+      SkillStepKind.none => 'без очка прокачки',
+    };
+    return Tooltip(
+      message: 'Рівень $level: $description',
+      triggerMode: TooltipTriggerMode.tap,
+      child: Semantics(
+        label: 'Рівень $level: $description',
+        excludeSemantics: true,
+        child: Column(
+          children: [
+            AspectRatio(
+              aspectRatio: 1,
+              child: LayoutBuilder(
+                builder: (context, constraints) => switch (step.kind) {
+                  SkillStepKind.ability => AbilityIcon(name: step.ability!, heroId: heroId, size: constraints.maxWidth),
+                  SkillStepKind.none => _Square(color: colors.surface2, text: '—', textColor: colors.textSubtle),
+                  _ => _Square(
+                      color: colors.clarity,
+                      text: step.kind == SkillStepKind.talentLeft ? 'L' : 'R',
+                      textColor: colors.ink,
+                    ),
+                },
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text('$level', style: context.text.labelSmall?.copyWith(fontSize: 10, height: 1.2, color: colors.textSubtle)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Square extends StatelessWidget {
+  const _Square({required this.color, required this.text, required this.textColor});
+
+  final Color color;
+  final String text;
+  final Color textColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
+      child: Text(text, style: context.text.labelSmall?.copyWith(fontSize: 12, color: textColor)),
+    );
+  }
+}
+
+class _SidePill extends StatelessWidget {
+  const _SidePill({required this.side, required this.selected});
+
+  final String side;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      width: 22,
+      height: 20,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: selected ? colors.clarity : colors.surface2,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(side, style: context.text.labelSmall?.copyWith(height: 1, color: selected ? colors.ink : colors.textSubtle)),
+    );
+  }
+}
+
+class _CoreItem extends StatelessWidget {
+  const _CoreItem({required this.name, this.timing});
+
+  final String name;
+  final Duration? timing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final time = timing;
+    return Semantics(
+      label: time == null ? name : '$name, близько ${Fmt.clock(time)}',
+      excludeSemantics: true,
+      child: SizedBox(
+        width: 58,
+        child: Column(
+          children: [
+            ItemIcon(name: name, width: 46),
+            const SizedBox(height: 4),
+            Text(
+              name,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: context.text.bodySmall?.copyWith(fontSize: 11, height: 14 / 11),
+            ),
+            if (time != null) Text(Fmt.clock(time), style: context.text.labelSmall?.copyWith(color: colors.mango)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AbilityRow extends StatelessWidget {
-  const _AbilityRow({required this.ability});
+  const _AbilityRow({required this.ability, required this.heroId});
 
   final Ability ability;
+  final int heroId;
 
   @override
   Widget build(BuildContext context) {
@@ -419,7 +626,7 @@ class _AbilityRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _AbilityIcon(ability: ability),
+          AbilityIcon(name: ability.name, url: ability.iconUrl, heroId: heroId),
           SizedBox(width: m.space3),
           Expanded(
             child: Column(
@@ -438,42 +645,6 @@ class _AbilityRow extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _AbilityIcon extends StatelessWidget {
-  const _AbilityIcon({required this.ability});
-
-  final Ability ability;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final fallback = Container(
-      alignment: Alignment.center,
-      color: colors.surface2,
-      child: Text(
-        '${ability.slotOrder ?? '•'}',
-        style: context.text.labelSmall?.copyWith(color: colors.textMuted),
-      ),
-    );
-    final url = ability.iconUrl;
-    return ExcludeSemantics(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(context.metrics.radiusMd),
-        child: SizedBox.square(
-          dimension: 40,
-          child: url == null
-              ? fallback
-              : Image.network(
-                  url,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) => progress == null ? child : fallback,
-                  errorBuilder: (context, error, stack) => fallback,
-                ),
-        ),
       ),
     );
   }

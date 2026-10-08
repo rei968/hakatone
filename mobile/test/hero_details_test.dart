@@ -28,6 +28,32 @@ void main() {
     expect(pudge.aiBuild?.coreItems.first, 'Phase Boots');
   });
 
+  test('AI-білд v2: 18 рівнів, таланти, таймінги, ситуативні предмети', () async {
+    final build = (await repository.fetchHero(14)).aiBuild!;
+    final steps = build.steps;
+    expect(steps, hasLength(18));
+    expect(steps[9].kind, SkillStepKind.talentLeft);
+    expect(steps[14].kind, SkillStepKind.talentRight);
+    expect(steps[16].kind, SkillStepKind.none);
+    expect(steps.first.ability, 'Meat Hook');
+    expect([for (final t in build.talents) t.level], [25, 20, 15, 10]);
+    expect(build.timingOf('Phase Boots'), const Duration(seconds: 575));
+    expect(build.timingOf('phase boots'), const Duration(seconds: 575));
+    expect(build.situationalItems.first.name, 'Force Staff');
+  });
+
+  test('старий білд без нових полів читається', () {
+    final build = AiBuild.fromJson({
+      'skill_order': ['Rot', 'Meat Hook'],
+      'core_items': ['Blink Dagger', {'name': 'Radiance', 'timing_sec': 1040}],
+      'tactics': 'x',
+    });
+    expect(build.talents, isEmpty);
+    expect(build.situationalItems, isEmpty);
+    expect(build.coreItems, ['Blink Dagger', 'Radiance']);
+    expect(build.timingOf('Radiance'), const Duration(seconds: 1040));
+  });
+
   test('невідомий герой — HeroNotFoundException (404)', () async {
     expect(() => repository.fetchHero(99999), throwsA(isA<HeroNotFoundException>()));
   });

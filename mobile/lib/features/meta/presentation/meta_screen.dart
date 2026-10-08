@@ -1,18 +1,20 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/dota/rank.dart';
 import '../../../core/format/formatters.dart';
 import '../../../core/theme/theme_context.dart';
 import '../../../core/widgets/app_skeleton.dart';
-import '../../../core/widgets/brand.dart';
+import '../../../core/widgets/controls.dart';
 import '../../../core/widgets/states.dart';
 import '../application/meta_controller.dart';
+import '../domain/hero_attribute.dart';
+import '../domain/meta_insights.dart';
+import '../domain/tier.dart';
 import 'widgets/meta_header.dart';
 import 'widgets/tier_section.dart';
 
-/// Головний екран — мета героїв за тірами (docs/design/01-main-menu.html).
+/// Мета героїв як таблиця Dotabuff: пошук, фільтр атрибута, сортування, ранг.
 class MetaScreen extends ConsumerStatefulWidget {
   const MetaScreen({super.key});
 
@@ -21,159 +23,168 @@ class MetaScreen extends ConsumerStatefulWidget {
 }
 
 class _MetaScreenState extends ConsumerState<MetaScreen> {
-  bool _scrolled = false;
-
-  /// Після вдалого оновлення: індикатор кольору дасту і спалах рядків — на хвилину.
-  bool _justSynced = false;
-  Timer? _syncedTimer;
-
-  /// «Оновлено X хв тому» перераховується сам, без дій гравця.
-  late final Timer _clock;
-
-  /// Повернулися в застосунок (наприклад, після `/admin/sync` на демо) — тягнемо свіжу мету.
-  late final AppLifecycleListener _lifecycle;
-
-  @override
-  void initState() {
-    super.initState();
-    _clock = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) setState(() {});
-    });
-    _lifecycle = AppLifecycleListener(onResume: _refresh);
-  }
+  final _search = TextEditingController();
+  HeroAttribute? _attribute;
+  MetaSort _sort = MetaSort.tier;
 
   @override
   void dispose() {
-    _clock.cancel();
-    _syncedTimer?.cancel();
-    _lifecycle.dispose();
+    _search.dispose();
     super.dispose();
   }
 
-  Future<void> _refresh() async {
-    await ref.read(metaControllerProvider.notifier).refresh();
-    if (!mounted) return;
-    final meta = ref.read(metaControllerProvider);
-    final synced = !meta.hasError && meta.value?.error == null;
-    setState(() => _justSynced = synced);
-    _syncedTimer?.cancel();
-    if (synced) {
-      _syncedTimer = Timer(const Duration(minutes: 1), () {
-        if (mounted) setState(() => _justSynced = false);
-      });
-    }
-  }
-
-  bool _onScroll(ScrollNotification notification) {
-    if (notification.depth != 0) return false;
-    final scrolled = notification.metrics.pixels > 0;
-    if (scrolled != _scrolled) setState(() => _scrolled = scrolled);
-    return false;
-  }
+  Future<void> _refresh() => ref.read(metaControllerProvider.notifier).refresh();
 
   @override
   Widget build(BuildContext context) {
     final meta = ref.watch(metaControllerProvider);
     final feed = meta.value;
-    final report = feed?.report;
-    final colors = context.colors;
     final m = context.metrics;
-
-    final status = switch (feed) {
-      _ when meta.isLoading || (feed?.refreshing ?? false) => UpdateStatus.refreshing,
-      null => UpdateStatus.failed,
-      MetaFeed(offline: true) => UpdateStatus.offline,
-      MetaFeed(error: != null) => UpdateStatus.failed,
-      _ when _justSynced => UpdateStatus.justSynced,
-      _ => UpdateStatus.fresh,
-    };
-
     return Scaffold(
       appBar: AppBar(
         titleSpacing: m.space4,
-        shape: Border(bottom: BorderSide(color: _scrolled ? colors.border : Colors.transparent)),
-        title: Row(
-          children: [
-            const MangoBadge(),
-            SizedBox(width: m.space3),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Wordmark(),
-                  UpdatedIndicator(
-                    status: status,
-                    patch: report?.patch,
-                    updatedAt: report?.updatedAt,
-                    savedAt: feed?.savedAt,
-                    now: DateTime.now(),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [Text('Мета героїв', style: context.text.titleLarge), const LiveUpdatedIndicator()],
         ),
-        actions: [const ProfileButton(), SizedBox(width: m.space1)],
+        actions: [const RankChip(), SizedBox(width: m.space4)],
       ),
-      body: NotificationListener<ScrollNotification>(
-        onNotification: _onScroll,
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          child: feed == null
-              ? (meta.hasError ? _error(meta.error!) : _skeleton())
-              : _content(feed),
-        ),
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: feed == null
+            ? (meta.hasError ? MetaErrorView(error: meta.error!, onRetry: _refresh) : const MetaSkeleton())
+            : _content(feed),
       ),
     );
   }
 
-  /// Ліниві слайвери: героїв 127, тож рядки й аватари будуються лише
-  /// тоді, коли докручуються до екрана.
   Widget _content(MetaFeed feed) {
     final m = context.metrics;
     final colors = context.colors;
-    final report = feed.report;
-    final saved = Fmt.dateTime(feed.savedAt);
+    final rank = ref.watch(rankProvider);
+    final heroes = queryHeroes(feed.report.heroes, search: _search.text, attribute: _attribute, sort: _sort);
+    final rankIgnored = rank != Rank.all && feed.report.rank != rank.apiValue;
+
+    final rows = <Widget>[];
+    Tier? group;
+    for (final hero in heroes) {
+      if (_sort == MetaSort.tier && hero.tier != group) {
+        group = hero.tier;
+        final count = heroes.where((h) => h.tier == group).length;
+        if (rows.isNotEmpty) rows.add(const Divider());
+        rows.add(Padding(
+          padding: EdgeInsets.fromLTRB(m.space3, m.space3, m.space3, m.space1),
+          child: Row(
+            children: [
+              TierBadge(tier: hero.tier, size: 22),
+              SizedBox(width: m.space2),
+              Expanded(
+                child: Text(
+                  '${hero.tier.title} · ${hero.tier.description.toLowerCase()} · ${Fmt.heroes(count)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.text.labelMedium?.copyWith(color: colors.textMuted),
+                ),
+              ),
+            ],
+          ),
+        ));
+      } else if (rows.isNotEmpty) {
+        rows.add(const Divider(indent: 64));
+      }
+      rows.add(MetaTableRow(hero: hero));
+    }
+
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        if (feed.error != null)
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(m.space4, m.space1, m.space4, 0),
-            sliver: SliverToBoxAdapter(
-              child: feed.offline
-                  ? StatusBanner(
-                      icon: Icons.wifi_off_rounded,
-                      iconColor: colors.clarity,
-                      message: 'Немає інтернету. Показуємо мету, збережену на пристрої $saved.',
-                    )
-                  : StatusBanner(
-                      icon: Icons.error_outline_rounded,
-                      iconColor: colors.salve,
-                      message: 'Не вдалося оновити мету: ${loadErrorMessage(feed.error!).toLowerCase()} '
-                          'Показуємо дані від $saved.',
-                    ),
-            ),
-          ),
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(m.space4, m.space4, m.space4, 0),
-          sliver: SliverToBoxAdapter(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Expanded(child: Text('Мета героїв', style: context.text.headlineSmall)),
-                Text(Fmt.heroes(report.heroes.length), style: context.text.bodySmall?.copyWith(color: colors.textMuted)),
-              ],
+          padding: EdgeInsets.fromLTRB(m.space4, m.space1, m.space4, 0),
+          sliver: SliverList.list(children: [
+            if (feed.error != null) ...[
+              MetaFeedBanner(feed: feed),
+              SizedBox(height: m.space3),
+            ],
+            if (rankIgnored) ...[
+              StatusBanner(
+                icon: Icons.info_outline_rounded,
+                iconColor: colors.clarity,
+                message: 'Сервер поки рахує мету за всі ранги, тому цифри для ${rank.label} ті самі.',
+              ),
+              SizedBox(height: m.space3),
+            ],
+            TextField(
+              key: const Key('meta-search'),
+              controller: _search,
+              onChanged: (_) => setState(() {}),
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: 'Знайти героя',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: _search.text.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: 'Очистити',
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => setState(_search.clear),
+                      ),
+              ),
             ),
-          ),
+            SizedBox(height: m.space2),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final attribute in <HeroAttribute?>[null, ...HeroAttribute.values])
+                    Padding(
+                      padding: EdgeInsets.only(right: m.space2 - 2),
+                      child: ChoiceChip(
+                        label: Text(attribute?.label ?? 'Усі'),
+                        selected: _attribute == attribute,
+                        showCheckmark: false,
+                        onSelected: (_) => setState(() => _attribute = attribute),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            SizedBox(height: m.space2),
+            SegmentedTabs<MetaSort>(
+              values: MetaSort.values,
+              selected: _sort,
+              label: (s) => s.label,
+              onChanged: (s) => setState(() => _sort = s),
+            ),
+            SizedBox(height: m.space3),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: m.space3),
+              child: DefaultTextStyle(
+                style: context.text.labelMedium!.copyWith(color: colors.textMuted),
+                child: Row(
+                  children: [
+                    Expanded(child: Text('Герой · ${heroes.length}')),
+                    SizedBox(width: 60, child: Text(_sort == MetaSort.winRate ? 'Він ↓' : 'Він', textAlign: TextAlign.end)),
+                    SizedBox(width: 52, child: Text(_sort == MetaSort.pickRate ? 'Пік ↓' : 'Пік', textAlign: TextAlign.end)),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: m.space1),
+          ]),
         ),
-        for (final (tier, heroes) in report.byTier) ...[
+        if (heroes.isEmpty)
           SliverPadding(
-            padding: EdgeInsets.fromLTRB(m.space4, m.space6, m.space4, 10),
-            sliver: SliverToBoxAdapter(child: TierHeader(tier: tier, count: heroes.length)),
-          ),
+            padding: EdgeInsets.all(m.space4),
+            sliver: SliverToBoxAdapter(
+              child: Text(
+                _search.text.trim().isEmpty ? 'Немає героїв з цим атрибутом.' : 'Нічого не знайдено за «${_search.text.trim()}».',
+                textAlign: TextAlign.center,
+                style: context.text.bodyMedium?.copyWith(color: colors.textMuted),
+              ),
+            ),
+          )
+        else
           SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: m.space4),
             sliver: DecoratedSliver(
@@ -183,100 +194,96 @@ class _MetaScreenState extends ConsumerState<MetaScreen> {
                 borderRadius: BorderRadius.circular(m.radiusXl),
               ),
               sliver: SliverList.builder(
-                itemCount: heroes.length,
-                itemBuilder: (context, i) => Material(
-                  type: MaterialType.transparency,
-                  child: Column(
-                    children: [
-                      if (i > 0) const Divider(indent: 72),
-                      MetaHeroRow(hero: heroes[i], flash: _justSynced),
-                    ],
-                  ),
-                ),
+                itemCount: rows.length,
+                itemBuilder: (context, i) => Material(type: MaterialType.transparency, child: rows[i]),
               ),
             ),
           ),
-        ],
         SliverToBoxAdapter(child: SizedBox(height: m.space8)),
       ],
     );
   }
+}
 
-  Widget _skeleton() {
+/// Банер, коли показуємо збережену мету: офлайн або сервер не відповів.
+class MetaFeedBanner extends StatelessWidget {
+  const MetaFeedBanner({super.key, required this.feed});
+
+  final MetaFeed feed;
+
+  @override
+  Widget build(BuildContext context) {
+    final saved = Fmt.dateTime(feed.savedAt);
+    return feed.offline
+        ? StatusBanner(
+            icon: Icons.wifi_off_rounded,
+            iconColor: context.colors.clarity,
+            message: 'Немає інтернету. Показуємо мету, збережену на пристрої $saved.',
+          )
+        : StatusBanner(
+            icon: Icons.error_outline_rounded,
+            iconColor: context.colors.salve,
+            message: 'Не вдалося оновити мету: ${loadErrorMessage(feed.error!).toLowerCase()} Показуємо дані від $saved.',
+          );
+  }
+}
+
+/// Ні мети, ні кешу: помилка з повтором.
+class MetaErrorView extends StatelessWidget {
+  const MetaErrorView({super.key, required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.all(context.metrics.space4),
+      children: [
+        ErrorState(
+          title: 'Не вдалося завантажити мету',
+          message: '${loadErrorMessage(error)} Щойно дані завантажаться, вони працюватимуть і без мережі.',
+          onRetry: onRetry,
+        ),
+      ],
+    );
+  }
+}
+
+class MetaSkeleton extends StatelessWidget {
+  const MetaSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     final m = context.metrics;
-    Widget row() => Padding(
-          padding: EdgeInsets.fromLTRB(m.space3, 14, m.space3, 14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppSkeleton(width: m.thumb, height: m.thumb, radius: m.radiusMd),
-              SizedBox(width: m.space3),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FractionallySizedBox(widthFactor: 0.46, child: AppSkeleton(height: 14)),
-                    SizedBox(height: 6),
-                    FractionallySizedBox(widthFactor: 0.62, child: AppSkeleton(height: 11)),
-                    SizedBox(height: 10),
-                    AppSkeleton(height: 11),
-                  ],
-                ),
-              ),
-              SizedBox(width: m.space3),
-              const AppSkeleton(width: 48, height: 16),
-            ],
-          ),
-        );
-    Widget section() => Padding(
-          padding: EdgeInsets.fromLTRB(m.space4, m.space6, m.space4, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  AppSkeleton(width: 32, height: 32, radius: 9),
-                  SizedBox(width: 12),
-                  AppSkeleton(width: 120, height: 14),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Card(child: Column(children: [row(), const Divider(indent: 72), row(), const Divider(indent: 72), row()])),
-            ],
-          ),
-        );
     return Semantics(
       label: 'Завантаження мети',
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(m.space4),
         children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(m.space4, m.space3, m.space4, 0),
-            child: const SlowHint(
-              after: Duration(seconds: 6),
-              text: 'Сервер прокидається після сну. Перший запит може тривати до хвилини.',
-            ),
+          const SlowHint(
+            after: Duration(seconds: 6),
+            text: 'Сервер прокидається після сну. Перший запит може тривати до хвилини.',
           ),
-          section(),
-          section(),
+          SizedBox(height: m.space3),
+          const AppSkeleton(height: 48, radius: 12),
+          SizedBox(height: m.space4),
+          for (var i = 0; i < 7; i++) ...[
+            Row(
+              children: [
+                AppSkeleton(width: 40, height: 40, radius: m.radiusMd),
+                SizedBox(width: m.space3),
+                const Expanded(child: AppSkeleton(height: 14)),
+                SizedBox(width: m.space6),
+                const AppSkeleton(width: 48, height: 14),
+              ],
+            ),
+            SizedBox(height: m.space4),
+          ],
         ],
       ),
-    );
-  }
-
-  Widget _error(Object error) {
-    final m = context.metrics;
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.all(m.space4),
-      children: [
-        SizedBox(height: m.space4),
-        ErrorState(
-          title: 'Не вдалося завантажити мету',
-          message: '${loadErrorMessage(error)} Щойно дані завантажаться, вони працюватимуть і без мережі.',
-          onRetry: _refresh,
-        ),
-      ],
     );
   }
 }
